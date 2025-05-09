@@ -1,6 +1,6 @@
 export default function ListStartupButton() {
     return (
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-semibold">
+        <button className="bg-[#4459FF] border border-white text-white px-5 py-2 rounded-full font-semibold">
             List your Startup
         </button>
     );

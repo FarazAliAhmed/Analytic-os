@@ -1,3 +1,6 @@
+import Image from "next/image";
+import { FaRegStar } from "react-icons/fa";
+
 interface GainerRowProps {
     logo: string;
     name: string;
@@ -13,8 +16,11 @@ interface GainerRowProps {
 export default function GainerRow({ logo, name, company, price, change, industry, liquidity, marketCap, chart }: GainerRowProps) {
     return (
         <tr className="border-t border-gray-800 hover:bg-gray-800 transition">
+            <td className="py-3 px-4">
+                <FaRegStar />
+            </td>
             <td className="py-3 px-4 flex items-center gap-3">
-                <img src={logo} alt={name} className="w-7 h-7 rounded-full" />
+                <Image src={logo} alt={name} width={28} height={28} className="rounded-full" />
                 <div>
                     <div className="font-semibold">{name}</div>
                     <div className="text-xs text-gray-400">{company}</div>
@@ -28,7 +34,7 @@ export default function GainerRow({ logo, name, company, price, change, industry
             <td className="py-3 px-4">{liquidity}</td>
             <td className="py-3 px-4">{marketCap}</td>
             <td className="py-3 px-4">
-                <img src={chart} alt="chart" className="h-8" />
+                <Image src={chart} alt="chart" className="h-8" />
             </td>
         </tr>
     );
