@@ -10,11 +10,11 @@ export default function Tabs() {
         { key: 'listings', label: 'New Listings' },
     ];
     return (
-        <div className="flex gap-8 border-b px-8 border-borderColor">
+        <div className="flex gap-8 border-b px-2 sm:px-8 border-borderColor">
             {tabs.map((tab) => (
                 <button
                     key={tab.key}
-                    className={`pb-2 px-2 font-semibold cursor-pointer ${active === tab.key ? 'border-b-2 border-[#8B99FF] text-[#8B99FF]' : 'text-gray-400'}`}
+                    className={`pb-2 px-2 text-sm sm:text-base font-semibold cursor-pointer ${active === tab.key ? 'border-b-2 border-[#8B99FF] text-[#8B99FF]' : 'text-gray-400'}`}
                     onClick={() => setActive(tab.key)}
                 >
                     {tab.label}
