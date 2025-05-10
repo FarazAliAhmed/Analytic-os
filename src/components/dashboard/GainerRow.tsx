@@ -15,7 +15,7 @@ interface GainerRowProps {
 
 export default function GainerRow({ logo, name, company, price, change, industry, liquidity, marketCap, chart }: GainerRowProps) {
     return (
-        <tr className="border-t text-white border-gray-800 hover:bg-gray-800 transition">
+        <tr className="border-t text-white cursor-pointer border-gray-800 hover:bg-gray-800 transition">
             <td className="py-3 px-4">
                 <FaRegStar />
             </td>

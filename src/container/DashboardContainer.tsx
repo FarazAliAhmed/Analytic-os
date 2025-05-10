@@ -14,25 +14,20 @@ export default function DashboardContainer() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="flex min-h-screen bg-primary text-white">
-            {/* Sidebar: overlay on mobile, fixed on md+ */}
-            <div
+        <div className="w-full flex min-h-screen bg-primary text-white">
+            {/* Overlay for mobile sidebar */}
+            {/* <div
                 className={`
-                    fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity md:hidden
+                    fixed w-64 inset-0 z-40 bg-black bg-opacity-50 transition-opacity md:hidden
                     ${sidebarOpen ? "block" : "hidden"}
                 `}
                 onClick={() => setSidebarOpen(false)}
-            />
-            <div
-                className={`
-                    fixed z-50 top-0 left-0 h-full w-64 bg-secondary border-r border-[#858B9A33] transition-transform md:static md:block
-                    ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-                `}
-                style={{ transition: "transform 0.3s" }}
-            >
-                <Sidebar onClose={() => setSidebarOpen(false)} />
-            </div>
-            <main className="flex-1 w-full">
+            /> */}
+
+            {/* Sidebar - passing the open state to the component */}
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+            <main className="flex-1 w-full bg-primary">
                 <Header onOpenSidebar={() => setSidebarOpen(true)} />
                 <div className='flex-1'>
                     <section className="mt-8 p-4 sm:p-6 md:p-8">
@@ -61,4 +56,4 @@ export default function DashboardContainer() {
             </main>
         </div>
     );
-} 
+}
