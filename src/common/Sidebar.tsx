@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { FaLayerGroup, FaWallet, FaTimes } from 'react-icons/fa';
 
 interface SidebarProps {
@@ -25,12 +26,12 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </button>
             <div className="text-2xl font-bold mb-12 px-4 pt-8">AnalyticaOS</div>
             <nav className="flex flex-col gap-2 px-4">
-                <a href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded bg-gray-800 font-semibold">
+                <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded bg-gray-800 font-semibold">
                     <FaLayerGroup /> Dashboard
-                </a>
-                <a href="/portfolio" className="flex items-center gap-3 px-4 py-3 rounded hover:bg-gray-800">
+                </Link>
+                <Link href="/portfolio" className="flex items-center gap-3 px-4 py-3 rounded hover:bg-gray-800">
                     <FaWallet /> Portfolio
-                </a>
+                </Link>
             </nav>
         </aside>
     );

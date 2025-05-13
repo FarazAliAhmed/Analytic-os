@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { FaRegStar } from "react-icons/fa";
 
 interface GainerRowProps {
@@ -14,8 +15,15 @@ interface GainerRowProps {
 }
 
 export default function GainerRow({ logo, name, company, price, change, industry, liquidity, marketCap, chart }: GainerRowProps) {
+
+    const router = useRouter();
+
+    const handleClick = () => {
+        router.push(`/dashboard/token/${name}`);
+    }
+
     return (
-        <tr className="border-t text-white cursor-pointer border-gray-800 hover:bg-gray-800 transition">
+        <tr className="border-t text-white cursor-pointer border-gray-800 hover:bg-gray-800 transition" onClick={handleClick}>
             <td className="py-3 px-4">
                 <FaRegStar />
             </td>
