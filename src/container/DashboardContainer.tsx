@@ -11,7 +11,6 @@ import Tabs from '../components/dashboard/Tabs';
 import TopTable from '../components/dashboard/TopTable';
 
 export default function DashboardContainer() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
 

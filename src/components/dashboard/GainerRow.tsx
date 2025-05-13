@@ -19,7 +19,7 @@ export default function GainerRow({ logo, name, company, price, change, industry
     const router = useRouter();
 
     const handleClick = () => {
-        router.push(`/dashboard/token/${name}`);
+        router.push(`/dashboard/token`);
     }
 
     return (
