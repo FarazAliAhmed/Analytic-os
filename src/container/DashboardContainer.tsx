@@ -1,16 +1,17 @@
 "use client"
 
 import { useState } from "react";
-import Sidebar from '../common/Sidebar';
-import Header from '../common/Header';
 import SearchBar from '../common/SearchBar';
 import FiltersButton from '../common/FiltersButton';
 import ListStartupButton from '../common/ListStartupButton';
 import TrendingStartups from '../components/dashboard/TrendingStartups';
 import Tabs from '../components/dashboard/Tabs';
 import TopTable from '../components/dashboard/TopTable';
+import FiltersModal from '../components/dashboard/FiltersModal';
 
 export default function DashboardContainer() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
 
     return (
 
@@ -26,7 +27,7 @@ export default function DashboardContainer() {
                     <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:gap-3 sm:justify-end">
                         <SearchBar />
                         <div className="flex">
-                            <FiltersButton />
+                            <FiltersButton onClick={() => setShowFilters(true)} />
                             <ListStartupButton />
                         </div>
                     </div>
@@ -37,6 +38,7 @@ export default function DashboardContainer() {
                 <Tabs />
                 <TopTable />
             </section>
+            <FiltersModal open={showFilters} onClose={() => setShowFilters(false)} />
         </div>
 
     );
