@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import ChartCard from '@/components/dashboard/token/ChartCard';
 import TransactionsTabs from '@/components/dashboard/token/TransactionsTabs';

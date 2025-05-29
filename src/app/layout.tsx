@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import NextTopLoader from 'nextjs-toploader';
 
 import '@rainbow-me/rainbowkit/styles.css';
 import {
@@ -60,6 +61,7 @@ export default function RootLayout({
             <body
               className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
+              <NextTopLoader color="#4459FF" showSpinner={false} />
               {children}
             </body>
           </html>

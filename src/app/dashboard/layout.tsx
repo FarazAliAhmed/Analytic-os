@@ -9,11 +9,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <div className="w-full h-screen flex bg-primary text-white overflow-hidden">
             {/* Sidebar - fixed on the left */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
                 <Sidebar isOpen={true} />
             </div>
             {/* Mobile Sidebar overlay */}
-            <div className="md:hidden">
+            {sidebarOpen && (
+                <div className="fixed inset-0 z-40 bg-opacity-40 backdrop-blur-xs" onClick={() => setSidebarOpen(false)} />
+            )}
+            <div className="lg:hidden fixed inset-y-0 left-0 z-50">
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             </div>
             {/* Main content area */}
