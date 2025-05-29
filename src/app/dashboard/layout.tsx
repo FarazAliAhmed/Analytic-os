@@ -7,16 +7,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="w-full flex min-h-screen bg-primary text-white">
-            {/* Sidebar - overlay on mobile, fixed on desktop */}
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-            <main className="flex-1 w-full bg-primary min-h-screen">
-                <Header onOpenSidebar={() => setSidebarOpen(true)} />
-                <div className="w-full">
+        <div className="w-full h-screen flex bg-primary text-white overflow-hidden">
+            {/* Sidebar - fixed on the left */}
+            <div className="hidden md:block">
+                <Sidebar isOpen={true} />
+            </div>
+            {/* Mobile Sidebar overlay */}
+            <div className="md:hidden">
+                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </div>
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col h-screen min-w-0">
+                {/* Header - fixed at the top, also scrolls horizontally with content */}
+                <div className="sticky top-0 z-30 w-full bg-primary">
+                    <Header onOpenSidebar={() => setSidebarOpen(true)} />
+                </div>
+                {/* Scrollable content (vertical and horizontal) */}
+                <div className="flex-1 overflow-auto w-full">
                     {children}
                 </div>
-            </main>
+            </div>
         </div>
     );
 } 

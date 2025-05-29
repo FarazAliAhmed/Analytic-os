@@ -29,7 +29,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded bg-gray-800 font-semibold">
                     <FaLayerGroup /> Dashboard
                 </Link>
-                <Link href="/portfolio" className="flex items-center gap-3 px-4 py-3 rounded hover:bg-gray-800">
+                <Link href="/dashboard/portfolio" className="flex items-center gap-3 px-4 py-3 rounded hover:bg-gray-800">
                     <FaWallet /> Portfolio
                 </Link>
             </nav>
