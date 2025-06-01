@@ -9,12 +9,12 @@ interface GainerRowProps {
     price: number;
     change: number;
     industry: string;
-    liquidity: string;
+    annualYield: string;
     marketCap: string;
     chart: string;
 }
 
-export default function GainerRow({ logo, name, company, price, change, industry, liquidity, marketCap, chart }: GainerRowProps) {
+export default function GainerRow({ logo, name, company, price, change, industry, annualYield, marketCap, chart }: GainerRowProps) {
 
     const router = useRouter();
 
@@ -39,7 +39,7 @@ export default function GainerRow({ logo, name, company, price, change, industry
                 <div className="text-xs text-green-400">{change > 0 ? '+' : ''}{change}%</div>
             </td>
             <td className="py-3 px-4">{industry}</td>
-            <td className="py-3 px-4">{liquidity}</td>
+            <td className="py-3 px-4">{annualYield}</td>
             <td className="py-3 px-4">{marketCap}</td>
             <td className="py-3 px-4">
                 <Image src={chart} alt="chart" className="h-8" />
