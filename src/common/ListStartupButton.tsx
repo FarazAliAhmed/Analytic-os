@@ -9,9 +9,8 @@ export default function ListStartupButton() {
     }
 
     return (
-        <button onClick={handleClick} className="cursor-pointer bg-[#4459FF] text-xs sm:text-base border border-white text-white px-5 py-2 rounded-lg sm:rounded-full font-semibold w-full sm:w-auto" >
-            <span className="inline sm:hidden">List</span>
-            <span className="hidden sm:inline">List your Startup</span>
+        <button onClick={handleClick} className="cursor-pointer px-3 py-1.5 bg-[#4459FF] hover:bg-[#3448EE] text-white text-xs font-medium rounded-lg transition-colors">
+           + List your startup
         </button>
     );
-} 
+}

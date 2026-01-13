@@ -1,0 +1,310 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// NextAuth Models
+// ============================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   DateTime?
+  username        String    @unique
+  userId          String    @unique  // ANALYTI-XXXXXX format
+  firstName       String?
+  lastName        String?
+  phone           String?
+  passwordHash    String?
+  walletAddress   String?   @unique
+  image           String?
+  role            UserRole  @default(INVESTOR)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  sessions        Session[]
+  accounts        Account[]
+  wallet          Wallet?
+  bankAccounts    BankAccount[]
+  notifications   Notification[]
+  recentSearches  RecentSearch[]
+  tokenHoldings   TokenHolding[]
+  tokenPurchases  TokenPurchase[]
+
+  @@index([walletAddress])
+  @@index([username])
+  @@index([email])
+  @@index([userId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@index([token])
+}
+
+// ============================================
+// Password Reset Models
+// ============================================
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
+// ============================================
+// NGN Wallet Models (Monnify Integration)
+// ============================================
+
+model Wallet {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  accountNumber  String   @unique
+  bankName       String
+  accountName    String
+  accountRef     String   @unique
+  balance        Int      @default(0)  // in kobo (cents)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+
+  @@index([userId])
+  @@index([accountNumber])
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  walletId        String
+  type            CreditDebit
+  amount          Int      // in kobo
+  description     String
+  reference       String   @unique  // Monnify transaction reference
+  monnifyRef      String?
+  status          TxStatus @default(pending)
+  createdAt       DateTime @default(now())
+
+  // Relations
+  wallet          Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([reference])
+}
+
+enum UserRole {
+  INVESTOR
+  ADMIN
+}
+
+enum CreditDebit {
+  credit
+  debit
+}
+
+enum TxStatus {
+  pending
+  completed
+  failed
+}
+
+// ============================================
+// Bank Account Management
+// ============================================
+
+model BankAccount {
+  id            String   @id @default(uuid())
+  userId        String
+  accountNumber String
+  bankName      String
+  bankCode      String
+  accountName   String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, accountNumber])
+  @@index([userId])
+}
+
+// ============================================
+// Notifications
+// ============================================
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  metadata    String?  @db.Text  // JSON string for additional data
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
+}
+
+enum NotificationType {
+  alert
+  transaction
+}
+
+// ============================================
+// Search
+// ============================================
+
+model RecentSearch {
+  id        String   @id @default(uuid())
+  userId    String
+  query     String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// ============================================
+// Token Purchase
+// ============================================
+
+model TokenHolding {
+  id           String   @id @default(uuid())
+  userId       String
+  tokenId      String   @default("INV")
+  quantity     Int      @default(0)  // Whole tokens
+  averagePrice Decimal  @default(1500) @db.Decimal(10, 2) // N1,500
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tokenId])
+  @@index([userId])
+}
+
+model TokenPurchase {
+  id              String   @id @default(uuid())
+  userId          String
+  tokenId         String   @default("INV")
+  nairaAmountSpent Int     // In Naira (not kobo)
+  tokensReceived  Int
+  pricePerToken   Int      // N1,500 in kobo (150000)
+  totalAmountKobo Int      // nairaAmountSpent * 100
+  reference       String   @unique
+  status          PurchaseStatus @default(pending)
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum PurchaseStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
+// ============================================
+// Token Management (Admin)
+// ============================================
+
+model Token {
+  id               String   @id @default(uuid())
+  tokenId          String?   @unique // Unique token ID (e.g., PYSK-001) - nullable for migration
+  name             String
+  symbol           String   @unique
+  price            Int      // in kobo (e.g., 150000 = ₦1,500)
+  annualYield      Decimal  @db.Decimal(5, 2)
+  industry         String
+  payoutFrequency  String
+  investmentType   String
+  riskLevel        String
+  listingDate      DateTime
+  closeDate        DateTime?
+  logoUrl          String?
+  minimumInvestment Int     // in kobo
+  employeeCount    Int
+  description      String?  @db.Text
+  volume           Int      @default(0) // Trading volume
+  transactionCount Int      @default(0) // Number of transactions
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([symbol])
+  @@index([industry])
+  @@index([isActive])
+  @@index([tokenId])
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tokenId])
+  @@index([userId])
+  @@index([tokenId])
+}

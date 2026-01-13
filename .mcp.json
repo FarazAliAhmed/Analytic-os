@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "/Users/apple/Project/analyti-web3/analyti-web3/.mcp-playwright.sh"
+    }
+  }
+}

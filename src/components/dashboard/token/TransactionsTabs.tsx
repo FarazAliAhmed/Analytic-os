@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client'
+
+import React, { useState, useEffect } from 'react';
 
 const holders = [
     { rank: 1, address: 'HJ...k6c', percent: 2.29, amount: 22.9, value: '$1.0M' },
@@ -7,31 +9,98 @@ const holders = [
     { rank: 4, address: 'Buy', percent: 6.28, amount: 22.9, value: '$661.0K' },
 ];
 
-const transactions = [
-    { date: '19s ago, Today', type: 'Buy', usd: 285.47, amount: '230,996', price: 1208.85, maker: '28aevP' },
-    { date: '19s ago, Today', type: 'Sell', usd: 285.47, amount: '230,996', price: 1208.85, maker: '28aevP' },
-    { date: '19s ago, Today', type: 'Buy', usd: 285.47, amount: '230,996', price: 1208.85, maker: '28aevP' },
-    { date: '19s ago, Today', type: 'Buy', usd: 285.47, amount: '230,996', price: 1208.85, maker: '28aevP' },
-];
-
 const TABS = [
     { label: 'Transactions' },
+    { label: 'My Orders' },
     { label: 'Holders (401)' },
     { label: 'About' },
 ];
 
+interface Transaction {
+    id: string
+    date: string
+    type: 'buy' | 'sell'
+    currency: string
+    amount: number
+    pricePerToken: number
+    totalAmount: number
+    userId: string
+}
+
+interface AllTransaction {
+    id: string
+    date: string
+    type: 'buy' | 'sell'
+    ngn: number
+    amount: number
+    price: number
+    maker: string
+}
+
 const TransactionsTabs: React.FC = () => {
     const [activeTab, setActiveTab] = useState(0);
+    const [allTransactions, setAllTransactions] = useState<AllTransaction[]>([]);
+    const [myTransactions, setMyTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (activeTab === 0) {
+            fetchAllTransactions();
+        } else if (activeTab === 1) {
+            fetchMyTransactions();
+        }
+    }, [activeTab]);
+
+    const fetchAllTransactions = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/token/all-transactions');
+            const data = await res.json();
+            if (data.success) {
+                setAllTransactions(data.transactions || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch all transactions:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchMyTransactions = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/token/transactions');
+            const data = await res.json();
+            if (data.success) {
+                setMyTransactions(data.transactions || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch transactions:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-NG', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
     return (
         <div className="bg-[#0A0A0A] rounded-xl border border-[#23262F] p-0 overflow-hidden">
             {/* Tabs */}
-            <div className="flex space-x-1 border-b border-[#23262F] bg-[#26262680] rounded-t-xl">
+            <div className="flex space-x-1 border-b border-[#23262F] bg-[#26262680] rounded-t-xl overflow-x-auto">
                 {TABS.map((tab, idx) => (
                     <button
                         key={tab.label}
-                        className={`px-6 py-3 cursor-pointer text-sm font-medium focus:outline-none transition-colors duration-150 ${activeTab === idx
-                            ? 'text-white border-b-2 border-white' // active
+                        className={`px-4 py-3 cursor-pointer text-sm font-medium focus:outline-none transition-colors duration-150 whitespace-nowrap ${activeTab === idx
+                            ? 'text-white border-b-2 border-white'
                             : 'text-gray-400 border-b-2 border-transparent hover:text-white'
                             }`}
                         onClick={() => setActiveTab(idx)}
@@ -45,33 +114,77 @@ const TransactionsTabs: React.FC = () => {
             <div className="p-0">
                 {activeTab === 0 && (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
-                            <thead>
-                                <tr className="text-gray-500 text-xs uppercase">
-                                    <th className="py-3 px-4 font-normal">Date</th>
-                                    <th className="py-3 px-4 font-normal">Type</th>
-                                    <th className="py-3 px-4 font-normal">USD</th>
-                                    <th className="py-3 px-4 font-normal">Amount</th>
-                                    <th className="py-3 px-4 font-normal">Price</th>
-                                    <th className="py-3 px-4 font-normal">Maker</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {transactions.map((tx, i) => (
-                                    <tr key={i} className="border-t border-[#23262F] last:rounded-b-xl">
-                                        <td className="py-3 px-4 text-white">{tx.date}</td>
-                                        <td className={`py-3 px-4 font-medium ${tx.type === 'Buy' ? 'text-green-500' : 'text-red-500'}`}>{tx.type}</td>
-                                        <td className={`py-3 px-4 ${tx.type === 'Buy' ? 'text-green-500' : 'text-red-500'}`}>{tx.usd}</td>
-                                        <td className="py-3 px-4 text-white">{tx.amount}</td>
-                                        <td className={`py-3 px-4 font-semibold ${tx.type === 'Buy' ? 'text-green-500' : 'text-red-500'}`}>${tx.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                        <td className="py-3 px-4 text-white">{tx.maker}</td>
+                        {loading ? (
+                            <div className="p-8 text-center text-gray-400">Loading...</div>
+                        ) : allTransactions.length === 0 ? (
+                            <div className="p-8 text-center text-gray-400">
+                                No transactions yet.
+                            </div>
+                        ) : (
+                            <table className="min-w-full text-left text-sm">
+                                <thead>
+                                    <tr className="text-gray-500 text-xs uppercase">
+                                        <th className="py-3 px-4 font-normal">Date</th>
+                                        <th className="py-3 px-4 font-normal">Type</th>
+                                        <th className="py-3 px-4 font-normal">NGN</th>
+                                        <th className="py-3 px-4 font-normal">Amount</th>
+                                        <th className="py-3 px-4 font-normal">Price</th>
+                                        <th className="py-3 px-4 font-normal">Maker</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {allTransactions.map((tx) => (
+                                        <tr key={tx.id} className="border-t border-[#23262F]">
+                                            <td className="py-3 px-4 text-white">{formatDate(tx.date)}</td>
+                                            <td className={`py-3 px-4 font-medium capitalize ${tx.type === 'buy' ? 'text-green-500' : 'text-red-500'}`}>{tx.type}</td>
+                                            <td className="py-3 px-4 text-white">₦{tx.ngn.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-white">{tx.amount} INV</td>
+                                            <td className="py-3 px-4 text-green-400">₦{tx.price.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-gray-400">{tx.maker}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 )}
                 {activeTab === 1 && (
+                    <div className="overflow-x-auto">
+                        {loading ? (
+                            <div className="p-8 text-center text-gray-400">Loading...</div>
+                        ) : myTransactions.length === 0 ? (
+                            <div className="p-8 text-center text-gray-400">
+                                No transactions yet. Buy some tokens to see your history.
+                            </div>
+                        ) : (
+                            <table className="min-w-full text-left text-sm">
+                                <thead>
+                                    <tr className="text-gray-500 text-xs uppercase">
+                                        <th className="py-3 px-4 font-normal">Date</th>
+                                        <th className="py-3 px-4 font-normal">Type</th>
+                                        <th className="py-3 px-4 font-normal">NGN</th>
+                                        <th className="py-3 px-4 font-normal">Amount</th>
+                                        <th className="py-3 px-4 font-normal">Price</th>
+                                        <th className="py-3 px-4 font-normal">User ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {myTransactions.map((tx) => (
+                                        <tr key={tx.id} className="border-t border-[#23262F]">
+                                            <td className="py-3 px-4 text-white">{formatDate(tx.date)}</td>
+                                            <td className="py-3 px-4 font-medium text-green-500 capitalize">{tx.type}</td>
+                                            <td className="py-3 px-4 text-white">₦{tx.totalAmount.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-white">{tx.amount} INV</td>
+                                            <td className="py-3 px-4 text-white">₦{tx.pricePerToken.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-gray-400 text-xs">{tx.userId}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                )}
+                {activeTab === 2 && (
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                             <thead>
@@ -85,7 +198,7 @@ const TransactionsTabs: React.FC = () => {
                             </thead>
                             <tbody>
                                 {holders.map((h, i) => (
-                                    <tr key={i} className="border-t border-[#23262F] last:rounded-b-xl">
+                                    <tr key={i} className="border-t border-[#23262F]">
                                         <td className="py-3 px-4 text-white font-semibold">#{h.rank}</td>
                                         <td className="py-3 px-4 text-white">{h.address}</td>
                                         <td className="py-3 px-4 text-white">{h.percent}%</td>
@@ -105,7 +218,7 @@ const TransactionsTabs: React.FC = () => {
                         </table>
                     </div>
                 )}
-                {activeTab === 2 && (
+                {activeTab === 3 && (
                     <div className="p-6">
                         <h2 className="text-xl font-bold mb-4 text-white">About PYSK</h2>
                         <div className="mb-6">
@@ -130,7 +243,7 @@ const TransactionsTabs: React.FC = () => {
                                     </tr>
                                     <tr>
                                         <td className="py-1 px-2 text-gray-400">Minimum Investment</td>
-                                        <td className="py-1 px-2 text-white">1 USDT</td>
+                                        <td className="py-1 px-2 text-white">₦1,500</td>
                                         <td className="py-1 px-2 text-gray-400">Risk Level</td>
                                         <td className="py-1 px-2 text-white">Low</td>
                                         <td className="py-1 px-2 text-gray-400">Employee Count</td>
@@ -150,4 +263,4 @@ const TransactionsTabs: React.FC = () => {
     );
 };
 
-export default TransactionsTabs; 
+export default TransactionsTabs;

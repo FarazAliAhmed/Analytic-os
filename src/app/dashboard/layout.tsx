@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Sidebar from '@/common/Sidebar';
 import Header from '@/common/Header';
+import { ZendeskButton } from '@/components/dashboard/ZendeskButton';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -30,6 +31,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {children}
                 </div>
             </div>
+            
+            {/* Zendesk Support Button - Fixed position */}
+            <ZendeskButton variant="icon" />
         </div>
     );
 } 

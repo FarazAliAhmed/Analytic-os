@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaLayerGroup, FaWallet, FaTimes, FaUser } from 'react-icons/fa';
+import { FaLayerGroup, FaWallet, FaTimes } from 'react-icons/fa';
 
 interface SidebarProps {
     isOpen?: boolean;
@@ -42,13 +42,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         }`}
                 >
                     <FaWallet /> Portfolio
-                </Link>
-                <Link
-                    href="/dashboard/account"
-                    className={`flex items-center gap-3 px-4 py-3 rounded ${pathname === '/dashboard/account' ? 'bg-gray-800 font-semibold' : 'hover:bg-gray-800'
-                        }`}
-                >
-                    <FaUser /> Account
                 </Link>
             </nav>
         </aside>

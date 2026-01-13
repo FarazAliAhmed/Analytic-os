@@ -1,13 +1,40 @@
-import Link from 'next/link';
+'use client'
+
+import { useState } from 'react'
+import SignInModal from '@/components/dashboard/SignInModal'
+import SignUpModal from '@/components/dashboard/SignUpModal'
+import { HeroSection } from '@/components/landing/HeroSection'
 
 export default function Home() {
+  const [showSignIn, setShowSignIn] = useState(false)
+  const [showSignUp, setShowSignUp] = useState(false)
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#181A20]">
-      <h1 className="text-3xl font-bold text-white mb-4">Welcome to Analyti Web3</h1>
-      <p className="text-gray-400 mb-8">Start exploring by visiting your dashboard.</p>
-      <Link href="/dashboard">
-        <button className="cursor-pointer px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">Go to Dashboard</button>
-      </Link>
+    <div className="min-h-screen">
+      <HeroSection
+        onOpenSignIn={() => setShowSignIn(true)}
+        onOpenSignUp={() => setShowSignUp(true)}
+      />
+
+      {/* Sign In Modal */}
+      <SignInModal
+        open={showSignIn}
+        onClose={() => setShowSignIn(false)}
+        onSwitchToSignup={() => {
+          setShowSignIn(false)
+          setShowSignUp(true)
+        }}
+      />
+
+      {/* Sign Up Modal */}
+      <SignUpModal
+        open={showSignUp}
+        onClose={() => setShowSignUp(false)}
+        onSwitchToSignin={() => {
+          setShowSignUp(false)
+          setShowSignIn(true)
+        }}
+      />
     </div>
-  );
+  )
 }

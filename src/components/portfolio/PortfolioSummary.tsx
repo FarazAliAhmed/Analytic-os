@@ -1,31 +1,153 @@
-import { FaDollarSign, FaChartLine, FaRegCalendarAlt } from 'react-icons/fa';
+'use client'
+
+import { useState, useEffect } from 'react'
+import { FaDollarSign, FaChartLine, FaRegCalendarAlt } from 'react-icons/fa'
+
+interface PortfolioData {
+    totalInvested: number
+    totalYield: number
+    yieldPercentage: number
+    transactionCount: number
+    buyCount: number
+    lastUpdated: string
+}
+
+function formatNaira(amount: number): string {
+    return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount).replace('NGN', '₦')
+}
 
 export default function PortfolioSummary() {
+    const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        async function fetchPortfolioSummary() {
+            try {
+                setLoading(true)
+                setError(null)
+                const response = await fetch('/api/portfolio/summary')
+                const result = await response.json()
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to fetch portfolio')
+                }
+
+                if (result.success && result.data) {
+                    setPortfolioData(result.data)
+                } else {
+                    throw new Error(result.error || 'Failed to fetch portfolio')
+                }
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchPortfolioSummary()
+    }, [])
+
+    if (loading) {
+        return (
+            <section className="mb-8">
+                <div className="flex flex-col md:flex-row gap-4">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex-1 bg-[#101014] rounded-xl p-6 flex flex-col gap-2 border border-[#23262F] min-h-[160px] animate-pulse">
+                            <div className="h-4 bg-gray-700 rounded w-1/3"></div>
+                            <div className="h-8 bg-gray-700 rounded w-2/3 mt-2"></div>
+                            <div className="h-4 bg-gray-700 rounded w-1/2 mt-2"></div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        )
+    }
+
+    if (error) {
+        return (
+            <section className="mb-8">
+                <div className="bg-[#101014] rounded-xl p-6 border border-red-700 text-red-400">
+                    <p>Error loading portfolio: {error}</p>
+                </div>
+            </section>
+        )
+    }
+
+    const { totalInvested, totalYield, yieldPercentage, transactionCount, buyCount } = portfolioData || {
+        totalInvested: 0,
+        totalYield: 0,
+        yieldPercentage: 0,
+        transactionCount: 0,
+        buyCount: 0
+    }
+
     return (
         <section className="mb-8">
             <div className="flex flex-col md:flex-row gap-4">
                 {/* Total Portfolio Value */}
                 <div className="flex-1 bg-[#101014] rounded-xl p-6 flex flex-col gap-2 border border-[#23262F] relative min-h-[160px]">
-                    <span className="absolute top-4 right-4 bg-transparent"><span className="bg-[#0B2E1A] text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-700">+3.2% today</span></span>
-                    <div className="flex items-center gap-2 text-gray-400 text-lg"><FaDollarSign /> Total Portfolio Value</div>
-                    <div className="text-3xl font-bold text-white">$57,939.11</div>
-                    <div className="text-green-400 text-sm font-medium">+8,720.44 since inception</div>
+                    {yieldPercentage > 0 && (
+                        <span className="absolute top-4 right-4 bg-transparent">
+                            <span className="bg-[#0B2E1A] text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-700">
+                                +{yieldPercentage.toFixed(1)}% yield
+                            </span>
+                        </span>
+                    )}
+                    <div className="flex items-center gap-2 text-gray-400 text-lg">
+                        <FaDollarSign /> Total Portfolio Value
+                    </div>
+                    <div className="text-3xl font-bold text-white">
+                        {formatNaira(totalInvested)}
+                    </div>
+                    <div className="text-green-400 text-sm font-medium">
+                        {totalYield > 0 ? `+${formatNaira(totalYield)} yield earned` : 'No yield earned yet'}
+                    </div>
                 </div>
+
                 {/* Total Yield */}
                 <div className="flex-1 bg-[#101014] rounded-xl p-6 flex flex-col gap-2 border border-[#23262F] relative min-h-[160px]">
-                    <span className="absolute top-4 right-4 bg-transparent"><span className="bg-[#0B2E1A] text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-700">Better than 78%</span></span>
-                    <div className="flex items-center gap-2 text-gray-400 text-lg"><FaChartLine /> Total Yield</div>
-                    <div className="text-3xl font-bold text-white">0.53</div>
-                    <div className="text-green-400 text-sm font-medium">+1.23% past month</div>
+                    {yieldPercentage > 0 && (
+                        <span className="absolute top-4 right-4 bg-transparent">
+                            <span className="bg-[#0B2E1A] text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-700">
+                                {yieldPercentage.toFixed(2)}% return
+                            </span>
+                        </span>
+                    )}
+                    <div className="flex items-center gap-2 text-gray-400 text-lg">
+                        <FaChartLine /> Total Yield
+                    </div>
+                    <div className="text-3xl font-bold text-white">
+                        {formatNaira(totalYield)}
+                    </div>
+                    <div className="text-green-400 text-sm font-medium">
+                        {totalInvested > 0 ? `Based on ${formatNaira(totalInvested)} invested` : 'Start investing to earn yield'}
+                    </div>
                 </div>
+
                 {/* Recent Activity */}
                 <div className="flex-1 bg-[#101014] rounded-xl p-6 flex flex-col gap-2 border border-[#23262F] relative min-h-[160px]">
-                    <span className="absolute top-4 right-4 bg-transparent"><span className="bg-[#0A1A2E] text-blue-400 px-3 py-1 rounded-full text-xs font-semibold border border-blue-700">Last 30 days</span></span>
-                    <div className="flex items-center gap-2 text-gray-400 text-lg"><FaRegCalendarAlt /> Recent Activity</div>
-                    <div className="text-3xl font-bold text-white">7 Transactions</div>
-                    <div className="text-gray-400 text-sm font-medium">3 buys, 2 sells, 2 hold</div>
+                    <span className="absolute top-4 right-4 bg-transparent">
+                        <span className="bg-[#0A1A2E] text-blue-400 px-3 py-1 rounded-full text-xs font-semibold border border-blue-700">
+                            Last 30 days
+                        </span>
+                    </span>
+                    <div className="flex items-center gap-2 text-gray-400 text-lg">
+                        <FaRegCalendarAlt /> Recent Activity
+                    </div>
+                    <div className="text-3xl font-bold text-white">
+                        {transactionCount} {transactionCount === 1 ? 'Transaction' : 'Transactions'}
+                    </div>
+                    <div className="text-gray-400 text-sm font-medium">
+                        {buyCount > 0 ? `${buyCount} ${buyCount === 1 ? 'buy' : 'buys'}` : '0 Transactions'}
+                    </div>
                 </div>
             </div>
         </section>
-    );
-} 
+    )
+}

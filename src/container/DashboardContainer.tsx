@@ -7,34 +7,45 @@ import ListStartupButton from '../common/ListStartupButton';
 import TrendingStartups from '../components/dashboard/TrendingStartups';
 import Tabs from '../components/dashboard/Tabs';
 import TopTable from '../components/dashboard/TopTable';
-import FiltersModal from '../components/dashboard/FiltersModal';
-import SearchModal from "@/components/dashboard/SearchModal";
-
+import FiltersDropdown from '../components/dashboard/FiltersDropdown';
+import SearchDropdown from '@/components/dashboard/SearchDropdown';
 
 export default function DashboardContainer() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [showSearchModal, setShowSearchModal] = useState(false);
-    const searchModalRef = useRef<HTMLDivElement>(null);
+    const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+    const searchDropdownRef = useRef<HTMLDivElement>(null);
 
+    // Close on click outside and escape
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (searchModalRef.current && !searchModalRef.current.contains(event.target as Node)) {
-                setShowSearchModal(false);
+            const dropdown = document.getElementById('filters-dropdown');
+            const dropdownBackdrop = document.getElementById('filters-dropdown-backdrop');
+            const filtersButton = document.querySelector('[class*="FiltersButton"]') as HTMLElement;
+
+            if (showFilters && dropdown && dropdownBackdrop) {
+                if (!dropdown.contains(event.target as Node) &&
+                    !dropdownBackdrop.contains(event.target as Node) &&
+                    (!filtersButton || !filtersButton.contains(event.target as Node))) {
+                    setShowFilters(false);
+                }
+            }
+            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+                setShowSearchDropdown(false);
             }
         }
         function handleEscape(event: KeyboardEvent) {
-            if (event.key === 'Escape') setShowSearchModal(false);
+            if (event.key === 'Escape') {
+                setShowFilters(false);
+                setShowSearchDropdown(false);
+            }
         }
-        if (showSearchModal) {
-            document.addEventListener('mousedown', handleClickOutside);
-            document.addEventListener('keydown', handleEscape);
-        }
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape);
         };
-    }, [showSearchModal]);
+    }, [showFilters]);
 
     return (
         <div className='flex-1'>
@@ -46,10 +57,18 @@ export default function DashboardContainer() {
                             <span className="ml-2 bg-white text-[#013131] font-medium text-xs xs:text-sm px-2 py-1 rounded-full">13 new</span>
                         </h2>
                     </div>
-                    <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:gap-3 sm:justify-end">
-                        <SearchBar onFocus={() => setShowSearchModal(true)} />
-                        <div className="flex">
-                            <FiltersButton onClick={() => setShowFilters(true)} />
+                    <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:gap-3 sm:justify-end relative">
+                        <div ref={searchDropdownRef}>
+                            <SearchBar onClick={() => setShowSearchDropdown(true)} />
+                            {showSearchDropdown && (
+                                <SearchDropdown
+                                    isOpen={showSearchDropdown}
+                                    onClose={() => setShowSearchDropdown(false)}
+                                />
+                            )}
+                        </div>
+                        <div className="flex relative">
+                            <FiltersButton onClick={() => setShowFilters(!showFilters)} />
                             <ListStartupButton />
                         </div>
                     </div>
@@ -60,8 +79,11 @@ export default function DashboardContainer() {
                 <Tabs />
                 <TopTable />
             </section>
-            <FiltersModal open={showFilters} onClose={() => setShowFilters(false)} />
-            {showSearchModal && <SearchModal ref={searchModalRef} onClose={() => setShowSearchModal(false)} />}
+            <FiltersDropdown
+                id="filters-dropdown"
+                isOpen={showFilters}
+                onClose={() => setShowFilters(false)}
+            />
         </div>
     );
 }
