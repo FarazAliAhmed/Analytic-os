@@ -28,7 +28,7 @@ model User {
   passwordHash    String?
   walletAddress   String?   @unique
   image           String?
-  role            UserRole  @default(INVESTOR)
+  role            UserRole  @default(USER)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -146,6 +146,7 @@ model Transaction {
 }
 
 enum UserRole {
+  USER
   INVESTOR
   ADMIN
 }

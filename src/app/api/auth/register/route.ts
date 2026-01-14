@@ -17,7 +17,7 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   phone: z.string().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  role: z.enum(['INVESTOR', 'ADMIN']).optional(),
+  role: z.enum(['USER', 'INVESTOR', 'ADMIN']).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         phone: data.phone || null,
         passwordHash,
         emailVerified: null, // Will be set when OTP is verified
-        role: data.role || 'INVESTOR',
+        role: data.role || 'USER',
       },
     })
 
