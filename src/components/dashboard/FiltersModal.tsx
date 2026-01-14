@@ -74,8 +74,8 @@ export default function FiltersModal({ open, onClose }: { open: boolean, onClose
                             <div className="font-medium text-white mb-2">Price Range</div>
                             <input type="range" min={0} max={100} className="w-full accent-white" />
                             <div className="flex justify-between text-lg text-white mt-2">
-                                <span>$0</span>
-                                <span>$5.4k</span>
+                                <span>₦0</span>
+                                <span>₦8,640,000</span>
                             </div>
                         </div>
                     )}
@@ -94,8 +94,8 @@ export default function FiltersModal({ open, onClose }: { open: boolean, onClose
                             <div className="font-medium text-white mb-2">Liquidity Range</div>
                             <input type="range" min={0} max={100} className="w-full accent-white" />
                             <div className="flex justify-between text-lg text-white mt-2">
-                                <span>$0m</span>
-                                <span>$71m</span>
+                                <span>₦0m</span>
+                                <span>₦113,600m</span>
                             </div>
                         </div>
                     )}
@@ -104,8 +104,8 @@ export default function FiltersModal({ open, onClose }: { open: boolean, onClose
                             <div className="font-medium text-white mb-2">Market Cap Range</div>
                             <input type="range" min={0} max={100} className="w-full accent-white" />
                             <div className="flex justify-between text-lg text-white mt-2">
-                                <span>$0m</span>
-                                <span>$3.4b</span>
+                                <span>₦0b</span>
+                                <span>₦5.4b</span>
                             </div>
                         </div>
                     )}

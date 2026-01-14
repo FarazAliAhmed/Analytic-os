@@ -126,8 +126,8 @@ export default function FiltersDropdown({ id, isOpen, onClose }: FiltersDropdown
                     {activeTab === 'Price' && (
                         <div>
                             <div className="flex justify-between text-sm text-white mb-2">
-                                <span>$0</span>
-                                <span>$5.4k</span>
+                                <span>₦0</span>
+                                <span>₦8,640,000</span>
                             </div>
                             <input type="range" min={0} max={100} className="w-full accent-[#4459FF]" />
                         </div>
@@ -151,8 +151,8 @@ export default function FiltersDropdown({ id, isOpen, onClose }: FiltersDropdown
                     {activeTab === 'Liquidity' && (
                         <div>
                             <div className="flex justify-between text-sm text-white mb-2">
-                                <span>$0m</span>
-                                <span>$71m</span>
+                                <span>₦0m</span>
+                                <span>₦113,600m</span>
                             </div>
                             <input type="range" min={0} max={100} className="w-full accent-[#4459FF]" />
                         </div>
@@ -160,8 +160,8 @@ export default function FiltersDropdown({ id, isOpen, onClose }: FiltersDropdown
                     {activeTab === 'Market Cap' && (
                         <div>
                             <div className="flex justify-between text-sm text-white mb-2">
-                                <span>$0m</span>
-                                <span>$3.4b</span>
+                                <span>₦0b</span>
+                                <span>₦5.4b</span>
                             </div>
                             <input type="range" min={0} max={100} className="w-full accent-[#4459FF]" />
                         </div>

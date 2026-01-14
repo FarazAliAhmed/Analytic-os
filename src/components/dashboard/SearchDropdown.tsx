@@ -45,10 +45,13 @@ const SearchDropdown = forwardRef<HTMLDivElement, SearchDropdownProps>(({ isOpen
   if (!isOpen) return null
 
   const formatPrice = (price: number) => {
-    if (price >= 1000) {
-      return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    }
-    return `$${price.toFixed(4)}`
+    // Format as Naira
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price)
   }
 
   const formatChange = (change: number) => {

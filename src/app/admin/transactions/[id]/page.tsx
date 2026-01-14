@@ -195,7 +195,7 @@ export default function TransactionDetailsPage() {
             {/* Fee */}
             <div>
               <p className="text-xs text-gray-500 mb-1">Fee</p>
-              <span className="text-white">$0.15</span>
+              <span className="text-white">₦240</span>
             </div>
           </div>
         </div>

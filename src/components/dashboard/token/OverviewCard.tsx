@@ -87,15 +87,15 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0 }) => {
         </div>
         <div>
           <div className="text-gray-400">Market Cap</div>
-          <div className="font-semibold text-white">$52m</div>
+          <div className="font-semibold text-white">₦83.2m</div>
         </div>
         <div>
           <div className="text-gray-400">Volume</div>
-          <div className="font-semibold text-white">$189K</div>
+          <div className="font-semibold text-white">₦302,400</div>
         </div>
         <div>
           <div className="text-gray-400">TSPv</div>
-          <div className="font-semibold text-white">$2m</div>
+          <div className="font-semibold text-white">₦3.2m</div>
         </div>
         <div>
           <div className="text-gray-400">Transactions</div>

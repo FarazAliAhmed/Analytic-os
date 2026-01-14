@@ -10,7 +10,7 @@ const gainers = [
     change: 6.82,
     industry: "Software",
     annualYield: "20%",
-    marketCap: "$375,088,722.47",
+    marketCap: "₦600,142,116,000",
     chart: icons.chart,
   },
   {
@@ -21,7 +21,7 @@ const gainers = [
     change: 5.71,
     industry: "EdTech",
     annualYield: "15%",
-    marketCap: "$1,180,461,481.40",
+    marketCap: "₦1,888,738,370,000",
     chart: icons.chart,
   },
   {
@@ -32,7 +32,7 @@ const gainers = [
     change: 4.63,
     industry: "Fintech",
     annualYield: "10%",
-    marketCap: "$99,685,507.10",
+    marketCap: "₦159,496,811,000",
     chart: icons.chart,
   },
   {
@@ -43,7 +43,7 @@ const gainers = [
     change: 3.24,
     industry: "Software",
     annualYield: "5%",
-    marketCap: "$63,912,251.45",
+    marketCap: "₦102,259,602,000",
     chart: icons.chart,
   },
 ];

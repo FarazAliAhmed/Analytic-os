@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 
 const holders = [
-    { rank: 1, address: 'HJ...k6c', percent: 2.29, amount: 22.9, value: '$1.0M' },
-    { rank: 2, address: '6Gp...EkUX', percent: 3.5, amount: 22.9, value: '$952.7K' },
-    { rank: 3, address: 'Buy', percent: 4.2, amount: 22.9, value: '$675.7K' },
-    { rank: 4, address: 'Buy', percent: 6.28, amount: 22.9, value: '$661.0K' },
+    { rank: 1, address: 'HJ...k6c', percent: 2.29, amount: 22.9, value: '₦1.6m' },
+    { rank: 2, address: '6Gp...EkUX', percent: 3.5, amount: 22.9, value: '₦1.52m' },
+    { rank: 3, address: 'Buy', percent: 4.2, amount: 22.9, value: '₦1.08m' },
+    { rank: 4, address: 'Buy', percent: 6.28, amount: 22.9, value: '₦1.06m' },
 ];
 
 const TABS = [

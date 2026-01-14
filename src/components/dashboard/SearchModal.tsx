@@ -1,14 +1,14 @@
 import React, { forwardRef } from 'react';
 
 const searchResults = [
-    { icon: 'P', name: 'PayStack Tech Ltd', tag: 'PYSK • Software', price: '$0.0054', change: '+6.82%', changeColor: 'text-green-500' },
-    { icon: 'W', name: 'Whisper Inc.', tag: 'WISP • EdTech', price: '$1.81', change: '+5.71%', changeColor: 'text-green-500' },
-    { icon: 'E', name: 'Edurex Service Inc.', tag: 'EDRX • Fintech', price: '$0.13', change: '+4.63%', changeColor: 'text-green-500' },
-    { icon: 'H', name: 'Hynet Tech Ltd', tag: 'HYNET • Software', price: '$0.64', change: '+3.24%', changeColor: 'text-green-500' },
-    { icon: 'I', name: 'Cerebral IO', tag: 'IO • AI', price: '$0.0041', change: '-0.52%', changeColor: 'text-red-500' },
-    { icon: 'W', name: 'Tesla Corp', tag: 'WEETH • Automotive', price: '$1,950.63', change: '-0.01%', changeColor: 'text-red-500' },
-    { icon: 'B', name: 'Balancer', tag: 'BAL • DeFi', price: '$1.05', change: '-3.69%', changeColor: 'text-red-500' },
-    { icon: 'X', name: 'Mantoformin', tag: 'XAUT • Crypto', price: '$3,274.71', change: '+1.03%', changeColor: 'text-green-500' },
+    { icon: 'P', name: 'PayStack Tech Ltd', tag: 'PYSK • Software', price: '₦8.64', change: '+6.82%', changeColor: 'text-green-500' },
+    { icon: 'W', name: 'Whisper Inc.', tag: 'WISP • EdTech', price: '₦2,896', change: '+5.71%', changeColor: 'text-green-500' },
+    { icon: 'E', name: 'Edurex Service Inc.', tag: 'EDRX • Fintech', price: '₦208', change: '+4.63%', changeColor: 'text-green-500' },
+    { icon: 'H', name: 'Hynet Tech Ltd', tag: 'HYNET • Software', price: '₦1,024', change: '+3.24%', changeColor: 'text-green-500' },
+    { icon: 'I', name: 'Cerebral IO', tag: 'IO • AI', price: '₦6.56', change: '-0.52%', changeColor: 'text-red-500' },
+    { icon: 'W', name: 'Tesla Corp', tag: 'WEETH • Automotive', price: '₦3,121,008', change: '-0.01%', changeColor: 'text-red-500' },
+    { icon: 'B', name: 'Balancer', tag: 'BAL • DeFi', price: '₦1,680', change: '-3.69%', changeColor: 'text-red-500' },
+    { icon: 'X', name: 'Mantoformin', tag: 'XAUT • Crypto', price: '₦5,239,536', change: '+1.03%', changeColor: 'text-green-500' },
 ];
 
 const SearchModal = forwardRef<HTMLDivElement, { onClose: () => void }>((props, ref) => (
