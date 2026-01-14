@@ -12,7 +12,6 @@ interface SignInModalProps {
 
 export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInModalProps) {
   const router = useRouter()
-  const { data: session } = useSession()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
@@ -36,12 +35,8 @@ export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInM
         setError('Invalid email or password')
       } else {
         onClose()
-        // Redirect based on role
-        if (session?.user?.role === 'ADMIN') {
-          router.push('/admin/dashboard')
-        } else {
-          router.push('/dashboard')
-        }
+        // Redirect to root - middleware will handle role-based redirect
+        router.push('/')
         router.refresh()
       }
     } catch {
