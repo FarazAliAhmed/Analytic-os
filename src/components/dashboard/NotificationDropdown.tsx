@@ -3,7 +3,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { NotificationType } from '@/generated/prisma/enums'
+
+type NotificationType = 'alert' | 'transaction'
 
 interface Notification {
   id: string
