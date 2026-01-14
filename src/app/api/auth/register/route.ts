@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Generate unique user ID
     const userId = generateUserId()
 
-    // Create user (email not verified yet - will be verified via OTP)
+    // Create user (auto-verified - OTP disabled temporarily)
     const user = await prisma.user.create({
       data: {
         email: data.email,
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         lastName: data.lastName,
         phone: data.phone || null,
         passwordHash,
-        emailVerified: null, // Will be set when OTP is verified
+        emailVerified: new Date(), // Auto-verify user
         role: data.role || 'USER',
       },
     })

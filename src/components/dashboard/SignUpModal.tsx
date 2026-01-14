@@ -74,30 +74,24 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
         return
       }
 
-      // Step 2: Send OTP for email verification
-      const otpRes = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      // Step 2: Auto sign-in (OTP verification disabled temporarily)
+      const signInResult = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
       })
 
-      const otpData = await otpRes.json()
-      console.log('OTP sent:', otpData.otp || 'Check server logs')
-
-      if (!otpRes.ok) {
-        setError('Account created but failed to send verification code')
+      if (signInResult?.error) {
+        setError('Account created but failed to sign in. Please try signing in manually.')
         setLoading(false)
         return
       }
 
-      // Success - show OTP step
-      setStep('otp')
-      setLoading(false)
-
-      // Log wallet info for user (if created during registration)
-      if (data.wallet) {
-        console.log('Wallet created:', data.wallet)
-      }
+      // Success - close modal and redirect
+      await updateSession()
+      onClose()
+      router.push('/dashboard')
+      router.refresh()
     } catch (err) {
       setError('Something went wrong')
       setLoading(false)
