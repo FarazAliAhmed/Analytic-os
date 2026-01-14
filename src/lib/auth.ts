@@ -74,6 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           firstName: user.firstName,
           lastName: user.lastName,
           walletAddress: user.walletAddress,
+          role: user.role,
         }
       },
     }),
@@ -93,7 +94,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.firstName = (user as any).firstName
         token.lastName = (user as any).lastName
         token.walletAddress = (user as any).walletAddress
+        token.role = (user as any).role
         token.image = (user as any).image
+      }
+      // Fetch fresh role from database for existing sessions
+      if (token.id && !token.role) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        })
+        if (dbUser) {
+          token.role = dbUser.role
+        }
       }
       // Update image from OAuth provider
       if (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter') {
@@ -108,6 +120,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.lastName = token.lastName as string | null
         session.user.walletAddress = token.walletAddress as string | null
         session.user.image = token.image as string | null
+        session.user.role = token.role as string | null
       }
       return session
     },
