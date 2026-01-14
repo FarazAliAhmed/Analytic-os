@@ -22,7 +22,7 @@ async function findAdminUsers() {
       console.log('  npx tsx scripts/set-admin-user.ts <email>');
     } else {
       console.log('Admin users found:\n');
-      admins.forEach((admin, index) => {
+      admins.forEach((admin: { id: string; email: string; username: string | null; role: string; createdAt: Date }, index: number) => {
         console.log(`${index + 1}. Email: ${admin.email}`);
         console.log(`   Username: ${admin.username}`);
         console.log(`   Created: ${admin.createdAt}`);
