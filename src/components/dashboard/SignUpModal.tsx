@@ -13,7 +13,7 @@ interface SignUpModalProps {
 
 export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpModalProps) {
   const router = useRouter()
-  const { update: updateSession } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [step, setStep] = useState<'form' | 'otp'>('form')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -87,10 +87,15 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
         return
       }
 
-      // Success - close modal and redirect
+      // Success - close modal and redirect based on role
       await updateSession()
       onClose()
-      router.push('/dashboard')
+      // Redirect to appropriate dashboard based on role
+      if (role === 'ADMIN' || session?.user?.role === 'ADMIN') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/dashboard')
+      }
       router.refresh()
     } catch (err) {
       setError('Something went wrong')
@@ -126,7 +131,12 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
       })
       await updateSession()
       onClose()
-      router.push('/dashboard')
+      // Redirect based on role
+      if (role === 'ADMIN' || session?.user?.role === 'ADMIN') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/dashboard')
+      }
       router.refresh()
     } catch (err) {
       setError('Something went wrong')
