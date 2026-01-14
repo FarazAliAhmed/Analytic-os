@@ -14,7 +14,7 @@ interface EmailOptions {
 export async function sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'AnalytiOS <noreply@analyti-os.com>',
+      from: 'AnalytiOS <onboarding@resend.dev>',
       to,
       subject,
       html,
