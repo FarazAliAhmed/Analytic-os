@@ -21,12 +21,12 @@ async function main() {
     console.log('Balance (NGN): ₦' + (user.wallet ? (Number(user.wallet.balance) / 100).toLocaleString() : 0));
     console.log('');
     console.log('=== Token Holdings ===');
-    user.tokenHoldings.forEach(h => {
+    user.tokenHoldings.forEach((h: { tokenId: string; quantity: number }) => {
       console.log(`${h.tokenId}: ${h.quantity} tokens`);
     });
     console.log('');
     console.log('=== Recent Purchases ===');
-    user.tokenPurchases.forEach(p => {
+    user.tokenPurchases.forEach((p: { createdAt: Date; tokensReceived: number; nairaAmountSpent: number }) => {
       console.log(`- ${p.createdAt.toISOString()}: ${p.tokensReceived} tokens for ₦${p.nairaAmountSpent}`);
     });
   } else {
