@@ -87,11 +87,18 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
         return
       }
 
-      // Success - close modal and redirect to root (middleware handles role redirect)
+      // Success - close modal and redirect based on role
       await updateSession()
       onClose()
-      router.push('/')
-      router.refresh()
+      // Use setTimeout to allow session to update
+      setTimeout(() => {
+        if (role === 'ADMIN') {
+          router.push('/admin/dashboard')
+        } else {
+          router.push('/dashboard')
+        }
+        router.refresh()
+      }, 100)
     } catch (err) {
       setError('Something went wrong')
       setLoading(false)
@@ -126,9 +133,15 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
       })
       await updateSession()
       onClose()
-      // Redirect to root (middleware handles role-based redirect)
-      router.push('/')
-      router.refresh()
+      // Use setTimeout to allow session to update
+      setTimeout(() => {
+        if (role === 'ADMIN') {
+          router.push('/admin/dashboard')
+        } else {
+          router.push('/dashboard')
+        }
+        router.refresh()
+      }, 100)
     } catch (err) {
       setError('Something went wrong')
       setLoading(false)
