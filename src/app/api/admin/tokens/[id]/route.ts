@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notifyTokenUpdate, notifyTokenDeleted } from '@/lib/notifications'
 
 const updateTokenSchema = z.object({
   name: z.string().min(1).optional(),
@@ -130,6 +131,72 @@ export async function PUT(
       },
     })
 
+    // Send notifications for important updates (price, yield, status)
+    const symbol = existing.symbol
+    const notifications: Promise<void>[] = []
+
+    if (data.price && data.price !== existing.price) {
+      notifications.push(
+        (async () => {
+          const users = await prisma.user.findMany({
+            where: {
+              role: { in: ['USER', 'INVESTOR'] },
+              tokenHoldings: { some: { tokenId: existing.tokenId || symbol } }
+            },
+            select: { id: true },
+          })
+          await Promise.all(
+            users.map((user) =>
+              notifyTokenUpdate(user.id, symbol, 'price', existing.price, data.price!)
+            )
+          )
+        })()
+      )
+    }
+
+    if (data.annualYield !== undefined && data.annualYield !== Number(existing.annualYield)) {
+      notifications.push(
+        (async () => {
+          const users = await prisma.user.findMany({
+            where: {
+              role: { in: ['USER', 'INVESTOR'] },
+              tokenHoldings: { some: { tokenId: existing.tokenId || symbol } }
+            },
+            select: { id: true },
+          })
+          await Promise.all(
+            users.map((user) =>
+              notifyTokenUpdate(user.id, symbol, 'yield', Number(existing.annualYield), data.annualYield!)
+            )
+          )
+        })()
+      )
+    }
+
+    if (data.isActive !== undefined && data.isActive !== existing.isActive) {
+      notifications.push(
+        (async () => {
+          const users = await prisma.user.findMany({
+            where: {
+              role: { in: ['USER', 'INVESTOR'] },
+              tokenHoldings: { some: { tokenId: existing.tokenId || symbol } }
+            },
+            select: { id: true },
+          })
+          await Promise.all(
+            users.map((user) =>
+              notifyTokenUpdate(user.id, symbol, 'status', existing.isActive, data.isActive!)
+            )
+          )
+        })()
+      )
+    }
+
+    // Execute all notifications (non-blocking)
+    Promise.all(notifications).catch((err) =>
+      console.error('Failed to send token update notifications:', err)
+    )
+
     return NextResponse.json({
       success: true,
       token: formatTokenResponse(token),
@@ -171,6 +238,26 @@ export async function DELETE(
       where: { id },
       data: { isActive: false },
     })
+
+    // Notify users who hold this token
+    try {
+      const symbol = existing.symbol
+      const users = await prisma.user.findMany({
+        where: {
+          role: { in: ['USER', 'INVESTOR'] },
+          tokenHoldings: { some: { tokenId: existing.tokenId || symbol } }
+        },
+        select: { id: true },
+      })
+
+      await Promise.all(
+        users.map((user) =>
+          notifyTokenDeleted(user.id, symbol, 'The token has been deactivated by the admin')
+        )
+      )
+    } catch (notifyError) {
+      console.error('Failed to send token deletion notifications:', notifyError)
+    }
 
     return NextResponse.json({
       success: true,

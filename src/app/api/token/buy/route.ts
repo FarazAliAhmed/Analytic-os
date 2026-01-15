@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notifyTokenPurchase } from '@/lib/notifications'
 
 const TOKEN_PRICE_NAIRA = 1500
 const TOKEN_PRICE_KOBO = TOKEN_PRICE_NAIRA * 100
@@ -111,6 +112,14 @@ export async function POST(request: NextRequest) {
         purchase
       }
     })
+
+    // Send notification to user
+    await notifyTokenPurchase(
+      session.user.id,
+      'INV',
+      tokensReceived,
+      data.nairaAmount
+    )
 
     return NextResponse.json({
       success: true,

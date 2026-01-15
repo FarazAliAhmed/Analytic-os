@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notifyNewTokenListed } from '@/lib/notifications'
 
 const createTokenSchema = z.object({
   name: z.string().min(1, 'Token name is required'),
@@ -173,6 +174,29 @@ export async function POST(request: NextRequest) {
         transactionCount: 0,
       },
     })
+
+    // Notify all active users about the new token
+    try {
+      const users = await prisma.user.findMany({
+        where: { role: { in: ['USER', 'INVESTOR'] } },
+        select: { id: true },
+      })
+
+      await Promise.all(
+        users.map((user) =>
+          notifyNewTokenListed(
+            user.id,
+            data.name,
+            data.symbol.toUpperCase(),
+            data.price,
+            data.annualYield
+          )
+        )
+      )
+    } catch (notifyError) {
+      console.error('Failed to send new token notifications:', notifyError)
+      // Don't fail the request if notifications fail
+    }
 
     return NextResponse.json({
       success: true,

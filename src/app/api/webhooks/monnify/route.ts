@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { creditWallet } from '@/lib/wallet-service'
+import { notifyWalletDeposit, notifyWithdrawal } from '@/lib/notifications'
 import crypto from 'crypto'
 
 // Use MONNIFY_SECRET_KEY for webhook signature verification (per Monnify docs)
@@ -102,6 +103,14 @@ export async function POST(request: NextRequest) {
       }
 
       console.log(`[Webhook] Credited ${amountPaid} NGN to wallet ${wallet.id}`)
+      
+      // Send notification to user
+      await notifyWalletDeposit(
+        wallet.userId,
+        Math.round(amountPaid * 100),
+        transactionReference || paymentReference
+      )
+      
       return NextResponse.json({ success: true })
     }
 
@@ -110,15 +119,36 @@ export async function POST(request: NextRequest) {
       const { reference, transactionReference, status } = eventData
 
       // Update transaction status to completed
-      await prisma.transaction.updateMany({
+      const updatedTx = await prisma.transaction.findFirst({
         where: {
           OR: [
             { reference },
             { monnifyRef: transactionReference }
           ]
         },
-        data: { status: 'completed' }
+        include: { wallet: true }
       })
+      
+      if (updatedTx) {
+        await prisma.transaction.update({
+          where: { id: updatedTx.id },
+          data: { status: 'completed' }
+        })
+        
+        // Notify user of successful withdrawal
+        const bankAccount = await prisma.bankAccount.findFirst({
+          where: { userId: updatedTx.wallet.userId }
+        })
+        
+        if (bankAccount) {
+          await notifyWithdrawal(
+            updatedTx.wallet.userId,
+            updatedTx.amount,
+            bankAccount.accountNumber,
+            'completed'
+          )
+        }
+      }
 
       console.log(`[Webhook] Disbursement completed: ${reference}`)
       return NextResponse.json({ success: true })
@@ -163,6 +193,20 @@ export async function POST(request: NextRequest) {
             }
           })
         ])
+
+        // Notify user of failed withdrawal and refund
+        const bankAccount = await prisma.bankAccount.findFirst({
+          where: { userId: originalTx.wallet.userId }
+        })
+
+        if (bankAccount) {
+          await notifyWithdrawal(
+            originalTx.wallet.userId,
+            originalTx.amount,
+            bankAccount.accountNumber,
+            'failed'
+          )
+        }
 
         console.log(`[Webhook] Refunded ${originalTx.amount} kobo for ${eventType}`)
       }

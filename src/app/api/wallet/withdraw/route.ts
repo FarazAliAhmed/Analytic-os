@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { initiateDisbursement } from '@/lib/monnify-disbursement'
+import { notifyWithdrawal } from '@/lib/notifications'
 
 const withdrawSchema = z.object({
   bankAccountId: z.string().uuid(),
@@ -83,6 +84,14 @@ export async function POST(request: NextRequest) {
           },
         }),
       ])
+
+      // Send notification to user
+      await notifyWithdrawal(
+        session.user.id,
+        data.amount,
+        bankAccount.accountNumber,
+        'initiated'
+      )
 
       return NextResponse.json({
         success: true,
