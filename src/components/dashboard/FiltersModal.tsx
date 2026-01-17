@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 const FILTER_TABS = [
-    'Category', 'Price', 'Performance', 'Liquidity', 'Market Cap', 'Sort'
+    'Category', 'Price', 'Volume', 'Yield'
 ];
 
 export default function FiltersModal({ open, onClose }: { open: boolean, onClose: () => void }) {
@@ -79,46 +79,23 @@ export default function FiltersModal({ open, onClose }: { open: boolean, onClose
                             </div>
                         </div>
                     )}
-                    {activeTab === 'Performance' && (
+                    {activeTab === 'Volume' && (
                         <div className='text-lg'>
-                            <div className="font-medium text-white mb-2">Performance</div>
-                            <div className="flex flex-col gap-2 text-lg">
-                                <label className="flex items-center gap-2"><input type="radio" name="performance" defaultChecked /> All</label>
-                                <label className="flex items-center gap-2"><input type="radio" name="performance" /> <span>Positive Only <span className="text-green-500">(+%)</span></span></label>
-                                <label className="flex items-center gap-2"><input type="radio" name="performance" /> <span>Negative Only <span className="text-red-500">(-%)</span></span></label>
-                            </div>
-                        </div>
-                    )}
-                    {activeTab === 'Liquidity' && (
-                        <div className='text-lg'>
-                            <div className="font-medium text-white mb-2">Liquidity Range</div>
+                            <div className="font-medium text-white mb-2">Volume Range</div>
                             <input type="range" min={0} max={100} className="w-full accent-white" />
                             <div className="flex justify-between text-lg text-white mt-2">
-                                <span>₦0m</span>
-                                <span>₦113,600m</span>
+                                <span>₦0</span>
+                                <span>₦10,000,000</span>
                             </div>
                         </div>
                     )}
-                    {activeTab === 'Market Cap' && (
+                    {activeTab === 'Yield' && (
                         <div className='text-lg'>
-                            <div className="font-medium text-white mb-2">Market Cap Range</div>
+                            <div className="font-medium text-white mb-2">Annual Yield Range</div>
                             <input type="range" min={0} max={100} className="w-full accent-white" />
                             <div className="flex justify-between text-lg text-white mt-2">
-                                <span>₦0b</span>
-                                <span>₦5.4b</span>
-                            </div>
-                        </div>
-                    )}
-                    {activeTab === 'Sort' && (
-                        <div className='text-lg'>
-                            <div className="font-medium text-white mb-2">Sort By</div>
-                            <div className="flex flex-col gap-2 text-lg md:text-xl">
-                                <label className="flex items-center gap-2"><input type="radio" name="sort" /> Alphabetical (A-Z)</label>
-                                <label className="flex items-center gap-2"><input type="radio" name="sort" /> Price: High to Low</label>
-                                <label className="flex items-center gap-2"><input type="radio" name="sort" /> Price: Low to High</label>
-                                <label className="flex items-center gap-2"><input type="radio" name="sort" defaultChecked /> Performance: High to Low</label>
-                                <label className="flex items-center gap-2"><input type="radio" name="sort" /> Performance: Low to High</label>
-                                <label className="flex items-center gap-2"><input type="radio" name="sort" /> Market Cap</label>
+                                <span>0%</span>
+                                <span>100%</span>
                             </div>
                         </div>
                     )}

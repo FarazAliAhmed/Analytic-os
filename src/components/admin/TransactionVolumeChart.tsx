@@ -53,16 +53,16 @@ export default function TransactionVolumeChart({
 
   const formatYAxis = (value: number) => {
     if (value >= 1000000) {
-      return `$ ${(value / 1000000).toFixed(1)}M`
+      return `₦${(value / 1000000).toFixed(1)}M`
     }
     if (value >= 1000) {
-      return `$ ${(value / 1000).toFixed(0)}00`
+      return `₦${(value / 1000).toFixed(0)}00`
     }
-    return `$ ${value}`
+    return `₦${value}`
   }
 
   const formatTooltipValue = (value: number) => {
-    return `$${value.toLocaleString()}`
+    return `₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   const formatXAxis = (date: string) => {

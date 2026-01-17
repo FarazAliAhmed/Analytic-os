@@ -49,11 +49,11 @@ const TokenChart: React.FC<TokenChartProps> = ({ data, timeRange }) => {
                         />
                         <YAxis
                             domain={['auto', 'auto']}
-                            tickFormatter={(value) => `$${value.toLocaleString()}`}
+                            tickFormatter={(value) => `₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                             tick={{ fontSize: 12 }}
                         />
                         <Tooltip
-                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Price']}
+                            formatter={(value: number) => [`₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Price']}
                             labelFormatter={(timestamp) => new Date(timestamp).toLocaleString()}
                         />
                         <Line

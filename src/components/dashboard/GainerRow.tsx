@@ -35,7 +35,7 @@ export default function GainerRow({ logo, name, company, price, change, industry
                 </div>
             </td>
             <td className="py-3 px-4">
-                <div className="font-semibold">${price}</div>
+                <div className="font-semibold">₦{price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 <div className="text-xs text-green-400">{change > 0 ? '+' : ''}{change}%</div>
             </td>
             <td className="py-3 px-4">{industry}</td>

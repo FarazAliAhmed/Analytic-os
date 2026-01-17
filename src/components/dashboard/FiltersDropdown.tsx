@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const FILTER_TABS = [
-    'Category', 'Price', 'Performance', 'Liquidity', 'Market Cap', 'Sort'
+    'Category', 'Price', 'Volume', 'Yield'
 ];
 
 interface FiltersDropdownProps {
@@ -132,60 +132,22 @@ export default function FiltersDropdown({ id, isOpen, onClose }: FiltersDropdown
                             <input type="range" min={0} max={100} className="w-full accent-[#4459FF]" />
                         </div>
                     )}
-                    {activeTab === 'Performance' && (
-                        <div className="space-y-2 text-sm">
-                            <label className="flex items-center gap-2 text-white cursor-pointer">
-                                <input type="radio" name="performance" className="accent-[#4459FF]" defaultChecked />
-                                All
-                            </label>
-                            <label className="flex items-center gap-2 text-white cursor-pointer">
-                                <input type="radio" name="performance" className="accent-[#4459FF]" />
-                                <span>Positive Only <span className="text-green-500">(+%)</span></span>
-                            </label>
-                            <label className="flex items-center gap-2 text-white cursor-pointer">
-                                <input type="radio" name="performance" className="accent-[#4459FF]" />
-                                <span>Negative Only <span className="text-red-500">(-%)</span></span>
-                            </label>
-                        </div>
-                    )}
-                    {activeTab === 'Liquidity' && (
+                    {activeTab === 'Volume' && (
                         <div>
                             <div className="flex justify-between text-sm text-white mb-2">
-                                <span>₦0m</span>
-                                <span>₦113,600m</span>
+                                <span>₦0</span>
+                                <span>₦10,000,000</span>
                             </div>
                             <input type="range" min={0} max={100} className="w-full accent-[#4459FF]" />
                         </div>
                     )}
-                    {activeTab === 'Market Cap' && (
+                    {activeTab === 'Yield' && (
                         <div>
                             <div className="flex justify-between text-sm text-white mb-2">
-                                <span>₦0b</span>
-                                <span>₦5.4b</span>
+                                <span>0%</span>
+                                <span>100%</span>
                             </div>
                             <input type="range" min={0} max={100} className="w-full accent-[#4459FF]" />
-                        </div>
-                    )}
-                    {activeTab === 'Sort' && (
-                        <div className="space-y-2 text-sm">
-                            {[
-                                { label: 'Alphabetical (A-Z)', value: 'az' },
-                                { label: 'Price: High to Low', value: 'price_high' },
-                                { label: 'Price: Low to High', value: 'price_low' },
-                                { label: 'Performance: High to Low', value: 'perf_high', default: true },
-                                { label: 'Performance: Low to High', value: 'perf_low' },
-                                { label: 'Market Cap', value: 'market_cap' },
-                            ].map((option) => (
-                                <label key={option.value} className="flex items-center gap-2 text-white cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="sort"
-                                        className="accent-[#4459FF]"
-                                        defaultChecked={option.default}
-                                    />
-                                    {option.label}
-                                </label>
-                            ))}
                         </div>
                     )}
                 </div>
