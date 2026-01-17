@@ -10,7 +10,7 @@ export default function ListStartupButton() {
 
     return (
         <button onClick={handleClick} className="cursor-pointer px-3 py-1.5 bg-[#4459FF] hover:bg-[#3448EE] text-white text-xs font-medium rounded-lg transition-colors">
-           + List your startup
+           + List your token
         </button>
     );
 }
