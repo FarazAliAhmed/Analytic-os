@@ -95,24 +95,47 @@ export async function POST(request: NextRequest) {
       })
 
       // 2. Update or create token holding
-      const holding = await tx.tokenHolding.upsert({
+      const existingHolding = await tx.tokenHolding.findUnique({
         where: {
           userId_tokenId: {
             userId: session.user.id,
             tokenId: token.symbol
           }
-        },
-        create: {
-          userId: session.user.id,
-          tokenId: token.symbol,
-          quantity: tokensReceived,
-          averagePrice: TOKEN_PRICE_NAIRA
-        },
-        update: {
-          quantity: { increment: tokensReceived },
-          updatedAt: new Date()
         }
       })
+
+      let holding
+      if (existingHolding) {
+        // Calculate new average price
+        const oldTotalCost = existingHolding.quantity * Number(existingHolding.averagePrice)
+        const newPurchaseCost = tokensReceived * TOKEN_PRICE_NAIRA
+        const newTotalQuantity = existingHolding.quantity + tokensReceived
+        const newAveragePrice = (oldTotalCost + newPurchaseCost) / newTotalQuantity
+
+        holding = await tx.tokenHolding.update({
+          where: {
+            userId_tokenId: {
+              userId: session.user.id,
+              tokenId: token.symbol
+            }
+          },
+          data: {
+            quantity: { increment: tokensReceived },
+            averagePrice: newAveragePrice,
+            updatedAt: new Date()
+          }
+        })
+      } else {
+        // First purchase - set initial average price
+        holding = await tx.tokenHolding.create({
+          data: {
+            userId: session.user.id,
+            tokenId: token.symbol,
+            quantity: tokensReceived,
+            averagePrice: TOKEN_PRICE_NAIRA
+          }
+        })
+      }
 
       // 3. Record purchase
       const purchase = await tx.tokenPurchase.create({
