@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { FiChevronRight } from 'react-icons/fi'
 
 interface TokenData {
   tokenId: string | null
@@ -52,7 +51,6 @@ const TokenInfoCard: React.FC<TokenInfoCardProps> = ({ token }) => {
     <div className="bg-[#151517] rounded-lg p-4 text-gray-200">
       <div className="flex items-center justify-between mb-4">
         <span className="text-gray-400 text-sm">Token Info</span>
-        <FiChevronRight className="text-gray-400" size={18} />
       </div>
 
       <div className="space-y-4">

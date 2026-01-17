@@ -1,9 +1,9 @@
 "use client"
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { 
-  FaLayerGroup, 
   FaExchangeAlt, 
   FaCoins, 
   FaUsers, 
@@ -16,11 +16,15 @@ interface AdminSidebarProps {
   onClose?: () => void
 }
 
+const DashboardIcon = () => (
+  <Image src="/icons/widget5.svg" alt="Dashboard" width={20} height={20} />
+)
+
 export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname()
 
   const navItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: FaLayerGroup },
+    { href: '/admin/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { href: '/admin/transactions', label: 'Transactions', icon: FaExchangeAlt },
     { href: '/admin/tokens', label: 'Tokens', icon: FaCoins },
     { href: '/admin/users', label: 'Users', icon: FaUsers },

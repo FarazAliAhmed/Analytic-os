@@ -53,7 +53,10 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <OverviewCard walletBalance={walletBalance} />
+      <OverviewCard 
+        walletBalance={walletBalance} 
+        tokenSymbol={token?.symbol || 'INV'}
+      />
       {loading ? (
         <div className="bg-[#151517] rounded-lg p-4 animate-pulse">
           <div className="h-4 bg-gray-700 rounded w-1/3 mb-4"></div>

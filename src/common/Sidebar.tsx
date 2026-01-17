@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaLayerGroup, FaWallet, FaTimes } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
+import Image from 'next/image';
 
 interface SidebarProps {
     isOpen?: boolean;
@@ -34,14 +35,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     className={`flex items-center gap-3 px-4 py-3 rounded font-semibold ${pathname === '/dashboard' ? 'bg-gray-800' : 'hover:bg-gray-800'
                         }`}
                 >
-                    <FaLayerGroup /> Dashboard
+                    <Image src="/icons/widget5.svg" alt="Dashboard" width={20} height={20} className="text-white" />
+                    Dashboard
                 </Link>
                 <Link
                     href="/dashboard/portfolio"
                     className={`flex items-center gap-3 px-4 py-3 rounded ${pathname === '/dashboard/portfolio' ? 'bg-gray-800' : 'hover:bg-gray-800'
                         }`}
                 >
-                    <FaWallet /> Portfolio
+                    <Image src="/icons/3-layers.svg" alt="Portfolio" width={20} height={20} className="text-white" />
+                    Portfolio
                 </Link>
             </nav>
         </aside>
