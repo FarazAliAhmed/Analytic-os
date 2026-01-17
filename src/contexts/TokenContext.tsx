@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 interface TokenContextType {
   tokenSymbol: string | null
@@ -16,7 +16,7 @@ interface TokenContextType {
     isInWatchlist?: boolean
   }) => void
   clearTokenData: () => void
-  toggleWatchlist: () => void
+  toggleWatchlist: () => Promise<void>
 }
 
 const TokenContext = createContext<TokenContextType | undefined>(undefined)
@@ -28,7 +28,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
   const [tokenPercentChange, setTokenPercentChange] = useState<number | null>(null)
   const [isInWatchlist, setIsInWatchlist] = useState(false)
 
-  const setTokenData = (data: {
+  const setTokenData = useCallback((data: {
     symbol: string
     price: number
     change?: number
@@ -40,17 +40,17 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     setTokenChange(data.change || null)
     setTokenPercentChange(data.percentChange || null)
     setIsInWatchlist(data.isInWatchlist || false)
-  }
+  }, [])
 
-  const clearTokenData = () => {
+  const clearTokenData = useCallback(() => {
     setTokenSymbol(null)
     setTokenPrice(null)
     setTokenChange(null)
     setTokenPercentChange(null)
     setIsInWatchlist(false)
-  }
+  }, [])
 
-  const toggleWatchlist = async () => {
+  const toggleWatchlist = useCallback(async () => {
     if (!tokenSymbol) return;
     
     try {
@@ -70,7 +70,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Failed to toggle watchlist:', err);
     }
-  }
+  }, [tokenSymbol, isInWatchlist])
 
   return (
     <TokenContext.Provider

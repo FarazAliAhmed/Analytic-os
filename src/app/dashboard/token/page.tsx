@@ -28,12 +28,14 @@ function TokenPageContent() {
     const { setTokenData, clearTokenData } = useToken();
 
     useEffect(() => {
+        let isMounted = true;
+        
         const fetchTokenData = async () => {
             try {
                 // Fetch token data
                 const tokensRes = await fetch('/api/tokens');
                 const tokensData = await tokensRes.json();
-                if (tokensData.success && tokensData.tokens && tokensData.tokens.length > 0) {
+                if (tokensData.success && tokensData.tokens && tokensData.tokens.length > 0 && isMounted) {
                     // Find token by symbol from URL, or use first token as fallback
                     const foundToken = tokenSymbol
                         ? tokensData.tokens.find((t: any) => t.symbol === tokenSymbol)
@@ -62,24 +64,30 @@ function TokenPageContent() {
                     setIsInWatchlist(inWatchlist);
 
                     // Update header with token data
-                    setTokenData({
-                        symbol: tokenData.symbol,
-                        price: tokenData.price,
-                        change: tokenData.annualYield,
-                        percentChange: tokenData.annualYield * 0.01,
-                        isInWatchlist: inWatchlist
-                    });
+                    if (isMounted) {
+                        setTokenData({
+                            symbol: tokenData.symbol,
+                            price: tokenData.price,
+                            change: tokenData.annualYield,
+                            percentChange: tokenData.annualYield * 0.01,
+                            isInWatchlist: inWatchlist
+                        });
+                    }
                 }
             } catch (err) {
                 console.error('Failed to fetch token data:', err);
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
+        
         fetchTokenData();
 
-        // Clear token data when leaving the page
+        // Cleanup: only clear when component unmounts
         return () => {
+            isMounted = false;
             clearTokenData();
         };
     }, [tokenSymbol, setTokenData, clearTokenData]);
