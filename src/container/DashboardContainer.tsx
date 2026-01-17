@@ -14,7 +14,24 @@ export default function DashboardContainer() {
     const [showFilters, setShowFilters] = useState(false);
     const [showSearchDropdown, setShowSearchDropdown] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
+    const [tokenCount, setTokenCount] = useState(0);
     const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Fetch token count
+    useEffect(() => {
+        const fetchTokenCount = async () => {
+            try {
+                const res = await fetch('/api/tokens');
+                const data = await res.json();
+                if (data.success && data.tokens) {
+                    setTokenCount(data.tokens.length);
+                }
+            } catch (error) {
+                console.error('Failed to fetch token count:', error);
+            }
+        };
+        fetchTokenCount();
+    }, []);
 
     // Close on click outside and escape
     useEffect(() => {
@@ -55,7 +72,11 @@ export default function DashboardContainer() {
                     <div className="flex flex-col gap-1 sm:gap-0">
                         <h2 className="text-base xs:text-lg sm:text-xl font-semibold">
                             Explore Tokens
-                            <span className="ml-2 bg-white text-[#013131] font-medium text-xs xs:text-sm px-2 py-1 rounded-full">13 new</span>
+                            {tokenCount > 0 && (
+                                <span className="ml-2 bg-white text-[#013131] font-medium text-xs xs:text-sm px-2 py-1 rounded-full">
+                                    {tokenCount} {tokenCount === 1 ? 'token' : 'tokens'}
+                                </span>
+                            )}
                         </h2>
                     </div>
                     <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:gap-3 sm:justify-end relative">

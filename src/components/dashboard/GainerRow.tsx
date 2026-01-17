@@ -1,6 +1,9 @@
+'use client'
+
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { FaRegStar } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import WatchlistButton from "@/components/watchlist/WatchlistButton";
 
 interface GainerRowProps {
     logo: string;
@@ -12,20 +15,68 @@ interface GainerRowProps {
     annualYield: string;
     marketCap: string;
     chart: string;
+    tokenId?: string;
 }
 
-export default function GainerRow({ logo, name, company, price, change, industry, annualYield, marketCap, chart }: GainerRowProps) {
-
+export default function GainerRow({ 
+    logo, 
+    name, 
+    company, 
+    price, 
+    change, 
+    industry, 
+    annualYield, 
+    marketCap, 
+    chart,
+    tokenId 
+}: GainerRowProps) {
     const router = useRouter();
+    const [isInWatchlist, setIsInWatchlist] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    const handleClick = () => {
+    useEffect(() => {
+        const checkWatchlist = async () => {
+            try {
+                const res = await fetch('/api/watchlist/ids');
+                const data = await res.json();
+                if (data.success && data.tokenIds) {
+                    setIsInWatchlist(data.tokenIds.includes(tokenId || name));
+                }
+            } catch (error) {
+                console.error('Failed to check watchlist:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (tokenId || name) {
+            checkWatchlist();
+        }
+    }, [tokenId, name]);
+
+    const handleClick = (e: React.MouseEvent) => {
+        // Don't navigate if clicking on the star button
+        if ((e.target as HTMLElement).closest('button')) {
+            return;
+        }
         router.push(`/dashboard/token`);
+    }
+
+    const handleWatchlistToggle = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent row click
     }
 
     return (
         <tr className="border-t text-white cursor-pointer border-gray-800 hover:bg-gray-800 transition" onClick={handleClick}>
-            <td className="py-3 px-4">
-                <FaRegStar />
+            <td className="py-3 px-4" onClick={handleWatchlistToggle}>
+                {!loading && (
+                    <WatchlistButton
+                        tokenId={tokenId || name}
+                        initialIsInWatchlist={isInWatchlist}
+                        size="sm"
+                        onToggle={(newState) => setIsInWatchlist(newState)}
+                    />
+                )}
             </td>
             <td className="py-3 px-4 flex items-center gap-3">
                 <Image src={logo} alt={name} width={28} height={28} className="rounded-full" />

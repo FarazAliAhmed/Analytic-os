@@ -28,33 +28,42 @@ export default function PortfolioHoldings() {
   const [loading, setLoading] = useState(true)
 
   // Fetch holdings and watchlist
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true)
+  const fetchData = async () => {
+    try {
+      setLoading(true)
 
-        // Fetch holdings
-        const holdingsRes = await fetch('/api/portfolio/holdings')
-        if (holdingsRes.ok) {
-          const data = await holdingsRes.json()
-          setHoldings(data.holdings || [])
-        }
-
-        // Fetch watchlist IDs
-        const watchlistRes = await fetch('/api/watchlist/ids')
-        if (watchlistRes.ok) {
-          const data = await watchlistRes.json()
-          setWatchlistIds(data.tokenIds || [])
-        }
-      } catch (error) {
-        console.error('Failed to fetch data:', error)
-      } finally {
-        setLoading(false)
+      // Fetch holdings
+      const holdingsRes = await fetch('/api/portfolio/holdings')
+      if (holdingsRes.ok) {
+        const data = await holdingsRes.json()
+        setHoldings(data.holdings || [])
       }
-    }
 
+      // Fetch watchlist IDs
+      const watchlistRes = await fetch('/api/watchlist/ids')
+      if (watchlistRes.ok) {
+        const data = await watchlistRes.json()
+        setWatchlistIds(data.tokenIds || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchData()
   }, [])
+
+  // Handle watchlist toggle
+  const handleWatchlistToggle = (tokenId: string, isInWatchlist: boolean) => {
+    if (isInWatchlist) {
+      setWatchlistIds(prev => [...prev, tokenId])
+    } else {
+      setWatchlistIds(prev => prev.filter(id => id !== tokenId))
+    }
+  }
 
   // Filter holdings based on view
   const displayedHoldings = view === 'all'
@@ -125,7 +134,11 @@ export default function PortfolioHoldings() {
           )}
         </div>
       ) : (
-        <PortfolioTable holdings={displayedHoldings} watchlistIds={watchlistIds} />
+        <PortfolioTable 
+          holdings={displayedHoldings} 
+          watchlistIds={watchlistIds}
+          onWatchlistToggle={handleWatchlistToggle}
+        />
       )}
     </section>
   )

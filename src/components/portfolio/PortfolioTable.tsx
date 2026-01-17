@@ -21,6 +21,7 @@ interface HoldingsToken {
 interface PortfolioTableProps {
   holdings: HoldingsToken[]
   watchlistIds: string[]
+  onWatchlistToggle?: (tokenId: string, isInWatchlist: boolean) => void
 }
 
 function formatNaira(amount: number): string {
@@ -31,7 +32,7 @@ function formatNaira(amount: number): string {
   }).format(amount).replace('NGN', '₦')
 }
 
-export default function PortfolioTable({ holdings, watchlistIds }: PortfolioTableProps) {
+export default function PortfolioTable({ holdings, watchlistIds, onWatchlistToggle }: PortfolioTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left">
@@ -114,6 +115,7 @@ export default function PortfolioTable({ holdings, watchlistIds }: PortfolioTabl
                     tokenId={holding.tokenId}
                     initialIsInWatchlist={isInWatchlist}
                     size="sm"
+                    onToggle={(newState) => onWatchlistToggle?.(holding.tokenId, newState)}
                   />
                 </td>
               </tr>

@@ -127,6 +127,7 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
               annualYield={`${token.annualYield}%`}
               marketCap={`₦${token.volume.toLocaleString()}`}
               chart="/icons/chart.svg"
+              tokenId={token.symbol}
             />
           ))}
         </tbody>
