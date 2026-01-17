@@ -204,7 +204,7 @@ const TransactionsTabs: React.FC = () => {
                                         <tr key={tx.id} className="border-t border-[#23262F]">
                                             <td className="py-3 px-4 text-white">{formatDate(tx.date)}</td>
                                             <td className={`py-3 px-4 font-medium capitalize ${tx.type === 'buy' ? 'text-green-500' : 'text-red-500'}`}>{tx.type}</td>
-                                            <td className="py-3 px-4 text-white">₦{tx.ngn.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-white">{tx.ngn.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-white">{tx.amount}</td>
                                             <td className="py-3 px-4 text-green-400">₦{tx.price.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-gray-400">{tx.maker}</td>

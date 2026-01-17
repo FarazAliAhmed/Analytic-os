@@ -106,9 +106,9 @@ export async function POST(request: NextRequest) {
 
       let holding
       if (existingHolding) {
-        // Calculate new average price
+        // Calculate new average price (in kobo)
         const oldTotalCost = existingHolding.quantity * Number(existingHolding.averagePrice)
-        const newPurchaseCost = tokensReceived * TOKEN_PRICE_NAIRA
+        const newPurchaseCost = tokensReceived * TOKEN_PRICE_KOBO
         const newTotalQuantity = existingHolding.quantity + tokensReceived
         const newAveragePrice = (oldTotalCost + newPurchaseCost) / newTotalQuantity
 
@@ -126,13 +126,13 @@ export async function POST(request: NextRequest) {
           }
         })
       } else {
-        // First purchase - set initial average price
+        // First purchase - set initial average price (in kobo)
         holding = await tx.tokenHolding.create({
           data: {
             userId: session.user.id,
             tokenId: token.symbol,
             quantity: tokensReceived,
-            averagePrice: TOKEN_PRICE_NAIRA
+            averagePrice: TOKEN_PRICE_KOBO
           }
         })
       }
