@@ -10,9 +10,14 @@ interface Token {
   industry: string;
   logoUrl: string | null;
   volume: number;
+  listingDate: string;
 }
 
-export default function TopTable() {
+interface TopTableProps {
+  activeTab?: string;
+}
+
+export default function TopTable({ activeTab = 'all' }: TopTableProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,9 +27,27 @@ export default function TopTable() {
         const res = await fetch('/api/tokens');
         const data = await res.json();
         if (data.success) {
-          // Take top 10 tokens by volume
-          const sorted = [...data.tokens].sort((a: Token, b: Token) => b.volume - a.volume);
-          setTokens(sorted.slice(0, 10));
+          let filtered = [...data.tokens];
+          
+          // Filter based on active tab
+          if (activeTab === 'volume') {
+            // Sort by volume (highest first)
+            filtered = filtered.sort((a: Token, b: Token) => b.volume - a.volume);
+          } else if (activeTab === 'upcoming') {
+            // Show tokens with future listing dates
+            const now = new Date();
+            filtered = filtered.filter((t: Token) => new Date(t.listingDate) > now);
+            filtered = filtered.sort((a: Token, b: Token) => 
+              new Date(a.listingDate).getTime() - new Date(b.listingDate).getTime()
+            );
+          } else {
+            // All listings - sort by newest first
+            filtered = filtered.sort((a: Token, b: Token) => 
+              new Date(b.listingDate).getTime() - new Date(a.listingDate).getTime()
+            );
+          }
+          
+          setTokens(filtered.slice(0, 20));
         }
       } catch (error) {
         console.error('Failed to fetch tokens:', error);
@@ -34,7 +57,7 @@ export default function TopTable() {
     };
 
     fetchTokens();
-  }, []);
+  }, [activeTab]);
 
   if (loading) {
     return (

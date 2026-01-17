@@ -13,6 +13,7 @@ import SearchDropdown from '@/components/dashboard/SearchDropdown';
 export default function DashboardContainer() {
     const [showFilters, setShowFilters] = useState(false);
     const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+    const [activeTab, setActiveTab] = useState('all');
     const searchDropdownRef = useRef<HTMLDivElement>(null);
 
     // Close on click outside and escape
@@ -76,8 +77,8 @@ export default function DashboardContainer() {
                 <TrendingStartups />
             </section>
             <section className="mt-8">
-                <Tabs />
-                <TopTable />
+                <Tabs onTabChange={setActiveTab} />
+                <TopTable activeTab={activeTab} />
             </section>
             <FiltersDropdown
                 id="filters-dropdown"
