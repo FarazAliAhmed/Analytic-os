@@ -6,6 +6,7 @@ import { FaStar, FaRegStar } from 'react-icons/fa';
 import ChartCard from '@/components/dashboard/token/ChartCard';
 import TransactionsTabs from '@/components/dashboard/token/TransactionsTabs';
 import Sidebar from '@/components/dashboard/token/Sidebar';
+import { useToken } from '@/contexts/TokenContext';
 
 interface TokenData {
   symbol: string;
@@ -24,6 +25,9 @@ function TokenPageContent() {
     const [isInWatchlist, setIsInWatchlist] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    // Get context functions
+    const { setTokenData, clearTokenData } = useToken();
+
     useEffect(() => {
         const fetchTokenData = async () => {
             try {
@@ -38,21 +42,34 @@ function TokenPageContent() {
                     
                     const selectedToken = foundToken || tokensData.tokens[0];
                     
-                    setToken({
+                    const tokenData = {
                         symbol: selectedToken.symbol,
                         name: selectedToken.name,
                         price: selectedToken.price / 100, // Convert from kobo to Naira
                         annualYield: selectedToken.annualYield,
                         volume: selectedToken.volume / 100, // Convert from kobo to Naira
                         transactionCount: selectedToken.transactionCount
-                    });
+                    };
+                    
+                    setToken(tokenData);
 
                     // Check if in watchlist
                     const watchlistRes = await fetch('/api/watchlist/ids');
                     const watchlistData = await watchlistRes.json();
-                    if (watchlistData.success && watchlistData.tokenIds) {
-                        setIsInWatchlist(watchlistData.tokenIds.includes(selectedToken.symbol));
-                    }
+                    const inWatchlist = watchlistData.success && watchlistData.tokenIds 
+                        ? watchlistData.tokenIds.includes(selectedToken.symbol)
+                        : false;
+                    
+                    setIsInWatchlist(inWatchlist);
+
+                    // Update header with token data
+                    setTokenData({
+                        symbol: tokenData.symbol,
+                        price: tokenData.price,
+                        change: tokenData.annualYield,
+                        percentChange: tokenData.annualYield * 0.01,
+                        isInWatchlist: inWatchlist
+                    });
                 }
             } catch (err) {
                 console.error('Failed to fetch token data:', err);
@@ -61,12 +78,19 @@ function TokenPageContent() {
             }
         };
         fetchTokenData();
-    }, [tokenSymbol]);
+
+        // Clear token data when leaving the page
+        return () => {
+            clearTokenData();
+        };
+    }, [tokenSymbol, setTokenData, clearTokenData]);
 
     const toggleWatchlist = async () => {
         if (!token) return;
         
         try {
+            const newWatchlistState = !isInWatchlist;
+            
             if (isInWatchlist) {
                 await fetch(`/api/watchlist/${token.symbol}`, { method: 'DELETE' });
             } else {
@@ -76,7 +100,17 @@ function TokenPageContent() {
                     body: JSON.stringify({ tokenId: token.symbol })
                 });
             }
-            setIsInWatchlist(!isInWatchlist);
+            
+            setIsInWatchlist(newWatchlistState);
+            
+            // Update header watchlist state
+            setTokenData({
+                symbol: token.symbol,
+                price: token.price,
+                change: token.annualYield,
+                percentChange: token.annualYield * 0.01,
+                isInWatchlist: newWatchlistState
+            });
         } catch (err) {
             console.error('Failed to toggle watchlist:', err);
         }
