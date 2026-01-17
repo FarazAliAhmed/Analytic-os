@@ -97,50 +97,50 @@ function TokenPageContent() {
         <div className="min-h-screen bg-[#181A20] p-4 md:p-6">
             {/* Token Header */}
             {token && (
-                <div className="mb-6 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {/* Token Icon - Smaller */}
-                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                            <span className="text-xl">⭐</span>
-                        </div>
-                        
-                        {/* Token Info */}
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-bold text-white">{token.symbol}</h1>
-                                <button
-                                    onClick={toggleWatchlist}
-                                    className="text-yellow-500 hover:text-yellow-400 transition-colors"
-                                >
-                                    {isInWatchlist ? <FaStar size={20} /> : <FaRegStar size={20} />}
-                                </button>
-                            </div>
-                            <p className="text-gray-400 text-xs">{token.name}</p>
-                        </div>
+                <div className="mb-6 flex items-center gap-6">
+                    {/* Token Icon */}
+                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <span className="text-3xl">⭐</span>
+                    </div>
+                    
+                    {/* Token Symbol */}
+                    <div className="flex-shrink-0">
+                        <h1 className="text-5xl font-bold text-white tracking-tight">{token.symbol}</h1>
+                    </div>
 
-                        {/* Price */}
-                        <div className="ml-6">
-                            <div className="text-3xl font-bold text-green-400">
-                                ₦{token.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            <div className="text-xs text-green-400">
-                                +{token.annualYield}% APY
-                            </div>
+                    {/* Price & Stats */}
+                    <div className="ml-auto text-right">
+                        <div className="text-5xl font-bold text-[#C8FF00]">
+                            {token.price.toLocaleString('en-NG', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                        </div>
+                        <div className="text-lg text-[#C8FF00] flex items-center justify-end gap-2 mt-1">
+                            <span>{token.annualYield.toFixed(2)}</span>
+                            <span>+{(token.annualYield * 0.01).toFixed(2)}%</span>
                         </div>
                     </div>
 
-                    {/* Stats */}
-                    <div className="hidden md:flex gap-8">
-                        <div>
-                            <div className="text-gray-400 text-xs">Volume</div>
-                            <div className="text-white font-semibold">
-                                ₦{token.volume.toLocaleString('en-NG')}
-                            </div>
+                    {/* Watchlist Button */}
+                    <button
+                        onClick={toggleWatchlist}
+                        className="text-yellow-500 hover:text-yellow-400 transition-colors flex-shrink-0"
+                    >
+                        {isInWatchlist ? <FaStar size={24} /> : <FaRegStar size={24} />}
+                    </button>
+                </div>
+            )}
+
+            {/* Stats Row - Hidden on mobile, shown on desktop */}
+            {token && (
+                <div className="hidden md:flex gap-8 mb-6">
+                    <div>
+                        <div className="text-gray-400 text-xs">Volume</div>
+                        <div className="text-white font-semibold">
+                            ₦{token.volume.toLocaleString('en-NG')}
                         </div>
-                        <div>
-                            <div className="text-gray-400 text-xs">Transactions</div>
-                            <div className="text-white font-semibold">{token.transactionCount}</div>
-                        </div>
+                    </div>
+                    <div>
+                        <div className="text-gray-400 text-xs">Transactions</div>
+                        <div className="text-white font-semibold">{token.transactionCount}</div>
                     </div>
                 </div>
             )}
