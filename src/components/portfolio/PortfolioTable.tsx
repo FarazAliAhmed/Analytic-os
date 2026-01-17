@@ -115,10 +115,12 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                     <>
                       <div className={`font-semibold ${totalYield >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {totalYield >= 0 ? '+' : ''}{formatNaira(totalYield)}
-                  </div>
-                  <div className={`text-xs ${yieldPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {yieldPercent >= 0 ? '+' : ''}{yieldPercent.toFixed(2)}%
-                  </div>
+                      </div>
+                      <div className={`text-xs ${yieldPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {yieldPercent >= 0 ? '+' : ''}{yieldPercent.toFixed(2)}%
+                      </div>
+                    </>
+                  )}
                 </td>
                 <td className="py-3 px-4 w-32">
                   <div className="flex items-center gap-2">
