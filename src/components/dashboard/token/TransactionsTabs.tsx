@@ -190,7 +190,7 @@ const TransactionsTabs: React.FC = () => {
                             <thead>
                                 <tr className="text-gray-500 text-xs uppercase">
                                     <th className="py-3 px-4 font-normal">Rank</th>
-                                    <th className="py-3 px-4 font-normal">Address</th>
+                                    <th className="py-3 px-4 font-normal">User ID</th>
                                     <th className="py-3 px-4 font-normal">%</th>
                                     <th className="py-3 px-4 font-normal">Amount</th>
                                     <th className="py-3 px-4 font-normal">Value</th>
