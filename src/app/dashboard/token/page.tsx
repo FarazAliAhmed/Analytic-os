@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import ChartCard from '@/components/dashboard/token/ChartCard';
 import TransactionsTabs from '@/components/dashboard/token/TransactionsTabs';
@@ -16,6 +17,9 @@ interface TokenData {
 }
 
 export default function Page() {
+    const searchParams = useSearchParams();
+    const tokenSymbol = searchParams.get('symbol'); // Get symbol from URL
+    
     const [token, setToken] = useState<TokenData | null>(null);
     const [isInWatchlist, setIsInWatchlist] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -23,25 +27,31 @@ export default function Page() {
     useEffect(() => {
         const fetchTokenData = async () => {
             try {
-                // Fetch token data (using first active token for now)
+                // Fetch token data
                 const tokensRes = await fetch('/api/tokens');
                 const tokensData = await tokensRes.json();
                 if (tokensData.success && tokensData.tokens && tokensData.tokens.length > 0) {
-                    const firstToken = tokensData.tokens[0];
+                    // Find token by symbol from URL, or use first token as fallback
+                    const foundToken = tokenSymbol
+                        ? tokensData.tokens.find((t: any) => t.symbol === tokenSymbol)
+                        : tokensData.tokens[0];
+                    
+                    const selectedToken = foundToken || tokensData.tokens[0];
+                    
                     setToken({
-                        symbol: firstToken.symbol,
-                        name: firstToken.name,
-                        price: firstToken.price / 100, // Convert from kobo to Naira
-                        annualYield: firstToken.annualYield,
-                        volume: firstToken.volume / 100, // Convert from kobo to Naira
-                        transactionCount: firstToken.transactionCount
+                        symbol: selectedToken.symbol,
+                        name: selectedToken.name,
+                        price: selectedToken.price / 100, // Convert from kobo to Naira
+                        annualYield: selectedToken.annualYield,
+                        volume: selectedToken.volume / 100, // Convert from kobo to Naira
+                        transactionCount: selectedToken.transactionCount
                     });
 
                     // Check if in watchlist
                     const watchlistRes = await fetch('/api/watchlist/ids');
                     const watchlistData = await watchlistRes.json();
                     if (watchlistData.success && watchlistData.tokenIds) {
-                        setIsInWatchlist(watchlistData.tokenIds.includes(firstToken.symbol));
+                        setIsInWatchlist(watchlistData.tokenIds.includes(selectedToken.symbol));
                     }
                 }
             } catch (err) {
@@ -51,7 +61,7 @@ export default function Page() {
             }
         };
         fetchTokenData();
-    }, []);
+    }, [tokenSymbol]);
 
     const toggleWatchlist = async () => {
         if (!token) return;
@@ -142,7 +152,7 @@ export default function Page() {
                     <TransactionsTabs />
                 </div>
                 {/* Sidebar */}
-                <Sidebar />
+                <Sidebar tokenSymbol={token?.symbol} />
             </div>
         </div>
     );

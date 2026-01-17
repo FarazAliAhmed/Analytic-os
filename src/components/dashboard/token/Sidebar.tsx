@@ -20,7 +20,7 @@ interface TokenData {
   transactionCount: number
 }
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<{ tokenSymbol?: string }> = ({ tokenSymbol }) => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [token, setToken] = useState<TokenData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,12 +35,16 @@ const Sidebar: React.FC = () => {
           setWalletBalance(walletData.data.balance);
         }
 
-        // Fetch token data (use default INV token for now)
+        // Fetch token data
         const tokenRes = await fetch('/api/tokens');
         const tokenData = await tokenRes.json();
         if (tokenData.success && tokenData.tokens && tokenData.tokens.length > 0) {
-          // Use the first active token
-          setToken(tokenData.tokens[0]);
+          // Find the specific token by symbol, or use first token as fallback
+          const foundToken = tokenSymbol 
+            ? tokenData.tokens.find((t: any) => t.symbol === tokenSymbol)
+            : tokenData.tokens[0];
+          
+          setToken(foundToken || tokenData.tokens[0]);
         }
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -49,7 +53,7 @@ const Sidebar: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [tokenSymbol]);
 
   return (
     <div className="space-y-6">
