@@ -89,24 +89,6 @@ export default function Header({
           
           {/* Title with optional price and watchlist */}
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-white tracking-tight">
-              {tokenSymbol || 'Dashboard'}
-            </h1>
-            
-            {/* Price - Only show if on token page */}
-            {tokenSymbol && tokenPrice && (
-              <div className="flex flex-col items-start">
-                <div className="text-2xl font-bold text-[#C8FF00]">
-                  {tokenPrice.toLocaleString('en-NG', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                </div>
-                {tokenChange !== undefined && tokenPercentChange !== undefined && (
-                  <div className="text-sm text-[#C8FF00]">
-                    {tokenChange.toFixed(2)} +{tokenPercentChange.toFixed(2)}%
-                  </div>
-                )}
-              </div>
-            )}
-            
             {/* Watchlist Star - Only show if on token page */}
             {tokenSymbol && (
               <button 
@@ -124,6 +106,24 @@ export default function Header({
                   </svg>
                 )}
               </button>
+            )}
+            
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              {tokenSymbol || 'Dashboard'}
+            </h1>
+            
+            {/* Price - Only show if on token page */}
+            {tokenSymbol && tokenPrice && (
+              <div className="flex flex-col items-start">
+                <div className="text-lg font-bold text-[#C8FF00]">
+                  {tokenPrice.toLocaleString('en-NG', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                </div>
+                {tokenChange !== undefined && tokenPercentChange !== undefined && (
+                  <div className="text-xs text-[#C8FF00]">
+                    {tokenChange.toFixed(2)} +{tokenPercentChange.toFixed(2)}%
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
