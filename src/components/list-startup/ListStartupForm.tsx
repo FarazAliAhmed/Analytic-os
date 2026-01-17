@@ -21,6 +21,7 @@ export default function ListStartupForm() {
         minimumInvestment: '',
         employeeCount: '',
         description: '',
+        contractAddress: '',
         listingDate: new Date().toISOString().split('T')[0],
     })
 
@@ -54,6 +55,7 @@ export default function ListStartupForm() {
                     minimumInvestment: parseFloat(formData.minimumInvestment) * 100, // Convert to kobo
                     employeeCount: parseInt(formData.employeeCount),
                     description: formData.description,
+                    contractAddress: formData.contractAddress || null,
                     listingDate: formData.listingDate,
                     logoUrl: '',
                 }),
@@ -174,6 +176,34 @@ export default function ListStartupForm() {
                     </select>
                 </div>
                 <div>
+                    <label className="block mb-2 text-sm">Payout Frequency *</label>
+                    <select 
+                        name="payoutFrequency"
+                        value={formData.payoutFrequency}
+                        onChange={handleChange}
+                        required
+                        className="w-full bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    >
+                        <option value="Monthly" className="bg-gray-800">Monthly</option>
+                        <option value="Quarterly" className="bg-gray-800">Quarterly</option>
+                        <option value="Annually" className="bg-gray-800">Annually</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block mb-2 text-sm">Investment Type *</label>
+                    <select 
+                        name="investmentType"
+                        value={formData.investmentType}
+                        onChange={handleChange}
+                        required
+                        className="w-full bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    >
+                        <option value="Equity" className="bg-gray-800">Equity</option>
+                        <option value="Debt" className="bg-gray-800">Debt</option>
+                        <option value="Hybrid" className="bg-gray-800">Hybrid</option>
+                    </select>
+                </div>
+                <div>
                     <label className="block mb-2 text-sm">Minimum Investment (₦) *</label>
                     <input 
                         name="minimumInvestment"
@@ -197,6 +227,18 @@ export default function ListStartupForm() {
                         className="w-full bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500" 
                         placeholder="e.g. 50" 
                     />
+                </div>
+                <div>
+                    <label className="block mb-2 text-sm">Contract Address</label>
+                    <input 
+                        name="contractAddress"
+                        type="text"
+                        value={formData.contractAddress}
+                        onChange={handleChange}
+                        className="w-full bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono text-sm" 
+                        placeholder="e.g. 0xe54d08a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7" 
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Blockchain contract address (optional)</p>
                 </div>
             </div>
             <div className="mt-6">

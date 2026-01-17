@@ -37,10 +37,23 @@ interface AllTransaction {
     maker: string
 }
 
+interface TokenData {
+    symbol: string
+    name: string
+    investmentType: string
+    payoutFrequency: string
+    annualYield: number
+    minimumInvestment: number
+    riskLevel: string
+    employeeCount: number
+    contractAddress: string | null
+}
+
 const TransactionsTabs: React.FC = () => {
     const [activeTab, setActiveTab] = useState(0);
     const [allTransactions, setAllTransactions] = useState<AllTransaction[]>([]);
     const [myTransactions, setMyTransactions] = useState<Transaction[]>([]);
+    const [tokenData, setTokenData] = useState<TokenData | null>(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -48,8 +61,36 @@ const TransactionsTabs: React.FC = () => {
             fetchAllTransactions();
         } else if (activeTab === 1) {
             fetchMyTransactions();
+        } else if (activeTab === 3) {
+            fetchTokenData();
         }
     }, [activeTab]);
+
+    const fetchTokenData = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/tokens');
+            const data = await res.json();
+            if (data.success && data.tokens && data.tokens.length > 0) {
+                const token = data.tokens[0];
+                setTokenData({
+                    symbol: token.symbol,
+                    name: token.name,
+                    investmentType: token.investmentType,
+                    payoutFrequency: token.payoutFrequency,
+                    annualYield: token.annualYield,
+                    minimumInvestment: token.minimumInvestment / 100, // Convert from kobo
+                    riskLevel: token.riskLevel,
+                    employeeCount: token.employeeCount,
+                    contractAddress: token.contractAddress
+                });
+            }
+        } catch (err) {
+            console.error('Failed to fetch token data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchAllTransactions = async () => {
         setLoading(true);
@@ -220,42 +261,54 @@ const TransactionsTabs: React.FC = () => {
                 )}
                 {activeTab === 3 && (
                     <div className="p-6">
-                        <h2 className="text-xl font-bold mb-4 text-white">About PYSK</h2>
-                        <div className="mb-6">
-                            <div className="font-semibold text-white mb-1">Overview</div>
-                            <div className="text-gray-300 text-sm">PYSK is a decentralized finance (DeFi) token designed to provide stable yield through low-risk, debt-based instruments. Built on a secure and scalable blockchain, PYSK offers transparent, automated investments for users seeking consistent returns.</div>
-                        </div>
-                        <div className="mb-6">
-                            <div className="font-semibold text-white mb-1">Purpose</div>
-                            <div className="text-gray-300 text-sm">The goal of PYSK is to democratize access to fixed-income opportunities by enabling investors to participate in structured debt offerings with ease and transparency. With automated smart contracts, users benefit from trustless execution and minimal counterparty risk.</div>
-                        </div>
-                        <div className="mb-6">
-                            <div className="font-semibold text-white mb-2">Investment Mechanics</div>
-                            <table className="min-w-full text-left text-sm mb-2">
-                                <tbody>
-                                    <tr>
-                                        <td className="py-1 px-2 text-gray-400">Type</td>
-                                        <td className="py-1 px-2 text-white">Debt-based instrument</td>
-                                        <td className="py-1 px-2 text-gray-400">Payout Frequency</td>
-                                        <td className="py-1 px-2 text-white">Monthly</td>
-                                        <td className="py-1 px-2 text-gray-400">Annual Yield</td>
-                                        <td className="py-1 px-2 text-white">35%</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="py-1 px-2 text-gray-400">Minimum Investment</td>
-                                        <td className="py-1 px-2 text-white">₦1,500</td>
-                                        <td className="py-1 px-2 text-gray-400">Risk Level</td>
-                                        <td className="py-1 px-2 text-white">Low</td>
-                                        <td className="py-1 px-2 text-gray-400">Employee Count</td>
-                                        <td className="py-1 px-2 text-white">50</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div>
-                            <div className="font-semibold text-white mb-1">Security & Compliance</div>
-                            <div className="text-gray-300 text-sm">Each transaction is recorded on-chain with verifiable smart contract logic. Regular audits and community governance ensure accountability and long-term sustainability.</div>
-                        </div>
+                        {loading ? (
+                            <div className="text-center text-gray-400">Loading...</div>
+                        ) : (
+                            <>
+                                <h2 className="text-xl font-bold mb-4 text-white">About {tokenData?.symbol || 'Token'}</h2>
+                                <div className="mb-6">
+                                    <div className="font-semibold text-white mb-1">Overview</div>
+                                    <div className="text-gray-300 text-sm">{tokenData?.name || 'Token'} is a decentralized finance (DeFi) token designed to provide stable yield through low-risk, debt-based instruments. Built on a secure and scalable blockchain, it offers transparent, automated investments for users seeking consistent returns.</div>
+                                </div>
+                                <div className="mb-6">
+                                    <div className="font-semibold text-white mb-1">Purpose</div>
+                                    <div className="text-gray-300 text-sm">The goal is to democratize access to fixed-income opportunities by enabling investors to participate in structured debt offerings with ease and transparency. With automated smart contracts, users benefit from trustless execution and minimal counterparty risk.</div>
+                                </div>
+                                <div className="mb-6">
+                                    <div className="font-semibold text-white mb-2">Investment Mechanics</div>
+                                    <table className="min-w-full text-left text-sm mb-2">
+                                        <tbody>
+                                            <tr>
+                                                <td className="py-1 px-2 text-gray-400">Type</td>
+                                                <td className="py-1 px-2 text-white">{tokenData?.investmentType || '---'}</td>
+                                                <td className="py-1 px-2 text-gray-400">Payout Frequency</td>
+                                                <td className="py-1 px-2 text-white">{tokenData?.payoutFrequency || '---'}</td>
+                                                <td className="py-1 px-2 text-gray-400">Annual Yield</td>
+                                                <td className="py-1 px-2 text-white">{tokenData?.annualYield ? `${tokenData.annualYield}%` : '---'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="py-1 px-2 text-gray-400">Minimum Investment</td>
+                                                <td className="py-1 px-2 text-white">{tokenData?.minimumInvestment ? `₦${tokenData.minimumInvestment.toLocaleString()}` : '---'}</td>
+                                                <td className="py-1 px-2 text-gray-400">Risk Level</td>
+                                                <td className="py-1 px-2 text-white">{tokenData?.riskLevel || '---'}</td>
+                                                <td className="py-1 px-2 text-gray-400">Employee Count</td>
+                                                <td className="py-1 px-2 text-white">{tokenData?.employeeCount || '---'}</td>
+                                            </tr>
+                                            {tokenData?.contractAddress && (
+                                                <tr>
+                                                    <td className="py-1 px-2 text-gray-400">Contract ID</td>
+                                                    <td colSpan={5} className="py-1 px-2 text-white font-mono text-xs break-all">{tokenData.contractAddress}</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div>
+                                    <div className="font-semibold text-white mb-1">Security & Compliance</div>
+                                    <div className="text-gray-300 text-sm">Each transaction is recorded on-chain with verifiable smart contract logic. Regular audits and community governance ensure accountability and long-term sustainability.</div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
             </div>

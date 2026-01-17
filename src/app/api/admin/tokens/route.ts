@@ -19,6 +19,7 @@ const createTokenSchema = z.object({
   minimumInvestment: z.number().min(1, 'Minimum investment must be positive'),
   employeeCount: z.number().int().min(0, 'Employee count must be positive'),
   description: z.string().optional(),
+  contractAddress: z.string().optional().nullable(),
 })
 
 type CreateTokenInput = z.infer<typeof createTokenSchema>
@@ -170,6 +171,7 @@ export async function POST(request: NextRequest) {
         minimumInvestment: data.minimumInvestment,
         employeeCount: data.employeeCount,
         description: data.description || null,
+        contractAddress: data.contractAddress || null,
         volume: 0,
         transactionCount: 0,
       },

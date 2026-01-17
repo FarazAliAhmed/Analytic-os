@@ -18,6 +18,7 @@ interface TokenResponse {
   minimumInvestment: number
   employeeCount: number
   description: string | null
+  contractAddress: string | null
   volume: number
   transactionCount: number
 }
@@ -40,6 +41,7 @@ function formatTokenResponse(token: any): TokenResponse {
     minimumInvestment: token.minimumInvestment,
     employeeCount: token.employeeCount,
     description: token.description || null,
+    contractAddress: token.contractAddress || null,
     volume: token.volume || 0,
     transactionCount: token.transactionCount || 0,
   }

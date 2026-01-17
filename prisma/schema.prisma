@@ -287,6 +287,7 @@ model Token {
   minimumInvestment Int     // in kobo
   employeeCount    Int
   description      String?  @db.Text
+  contractAddress  String?  // Blockchain contract address (e.g., 0xe54d08a...bfd4b)
   volume           Int      @default(0) // Trading volume
   transactionCount Int      @default(0) // Number of transactions
   isActive         Boolean  @default(true)
