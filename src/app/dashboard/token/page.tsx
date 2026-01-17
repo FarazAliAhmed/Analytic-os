@@ -98,32 +98,32 @@ function TokenPageContent() {
             {/* Token Header */}
             {token && (
                 <div className="mb-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        {/* Token Icon */}
-                        <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                            <span className="text-2xl">⭐</span>
+                    <div className="flex items-center gap-3">
+                        {/* Token Icon - Smaller */}
+                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                            <span className="text-xl">⭐</span>
                         </div>
                         
                         {/* Token Info */}
                         <div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-bold text-white">{token.symbol}</h1>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-2xl font-bold text-white">{token.symbol}</h1>
                                 <button
                                     onClick={toggleWatchlist}
                                     className="text-yellow-500 hover:text-yellow-400 transition-colors"
                                 >
-                                    {isInWatchlist ? <FaStar size={24} /> : <FaRegStar size={24} />}
+                                    {isInWatchlist ? <FaStar size={20} /> : <FaRegStar size={20} />}
                                 </button>
                             </div>
-                            <p className="text-gray-400 text-sm">{token.name}</p>
+                            <p className="text-gray-400 text-xs">{token.name}</p>
                         </div>
 
                         {/* Price */}
-                        <div className="ml-8">
-                            <div className="text-4xl font-bold text-green-400">
+                        <div className="ml-6">
+                            <div className="text-3xl font-bold text-green-400">
                                 ₦{token.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
-                            <div className="text-sm text-green-400">
+                            <div className="text-xs text-green-400">
                                 +{token.annualYield}% APY
                             </div>
                         </div>

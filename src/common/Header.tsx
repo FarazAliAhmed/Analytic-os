@@ -80,7 +80,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-lg lg:text-xl font-semibold text-white">Dashboard</h1>
+          <h1 className="text-lg lg:text-xl font-semibold text-white">new card</h1>
         </div>
 
         <div className="flex items-center gap-2 lg:gap-3">
