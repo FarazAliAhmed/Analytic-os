@@ -56,26 +56,31 @@ export default function GainerRow({
 
     const handleClick = (e: React.MouseEvent) => {
         // Don't navigate if clicking on the star button
-        if ((e.target as HTMLElement).closest('button')) {
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('[role="button"]')) {
+            e.stopPropagation();
             return;
         }
         router.push(`/dashboard/token`);
     }
 
-    const handleWatchlistToggle = (e: React.MouseEvent) => {
+    const handleWatchlistClick = (e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent row click
     }
 
     return (
         <tr className="border-t text-white cursor-pointer border-gray-800 hover:bg-gray-800 transition" onClick={handleClick}>
-            <td className="py-3 px-4" onClick={handleWatchlistToggle}>
+            <td className="py-3 px-4" onClick={handleWatchlistClick}>
                 {!loading && (
                     <WatchlistButton
                         tokenId={tokenId || name}
                         initialIsInWatchlist={isInWatchlist}
-                        size="sm"
+                        size="md"
                         onToggle={(newState) => setIsInWatchlist(newState)}
                     />
+                )}
+                {loading && (
+                    <div className="w-5 h-5 border-2 border-gray-600 border-t-yellow-500 rounded-full animate-spin"></div>
                 )}
             </td>
             <td className="py-3 px-4 flex items-center gap-3">

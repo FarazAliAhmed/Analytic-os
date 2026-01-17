@@ -73,26 +73,17 @@ export default function WatchlistButton({
       onClick={handleToggle}
       disabled={loading}
       className={`
-        flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-        transition-colors disabled:opacity-50
-        ${isInWatchlist
-          ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'
-          : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300'
-        }
+        transition-all disabled:opacity-50 hover:scale-110
+        ${isInWatchlist ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500'}
       `}
       title={isInWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
     >
       <Star
         size={iconSizes[size]}
-        className={`transition-colors ${
-          isInWatchlist ? 'fill-yellow-500' : 'fill-transparent'
+        className={`transition-all ${
+          isInWatchlist ? 'fill-yellow-500 stroke-yellow-500' : 'fill-transparent stroke-current'
         }`}
       />
-      {showLabel && (
-        <span className="text-sm font-medium">
-          {isInWatchlist ? 'Watching' : 'Watch'}
-        </span>
-      )}
     </button>
   )
 }

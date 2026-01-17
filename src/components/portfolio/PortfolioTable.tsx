@@ -60,13 +60,19 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Image
-                        src={holding.token.logoUrl || '/token.png'}
-                        alt={holding.token.name}
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                      />
+                      {holding.token.logoUrl ? (
+                        <Image
+                          src={holding.token.logoUrl}
+                          alt={holding.token.name}
+                          width={32}
+                          height={32}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                          {holding.token.symbol.substring(0, 2)}
+                        </div>
+                      )}
                       {isInWatchlist && (
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full border-2 border-[#0A0A0A]" />
                       )}
