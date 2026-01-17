@@ -15,14 +15,14 @@ interface Token {
 
 interface TopTableProps {
   activeTab?: string;
+  timePeriod?: '1d' | '7d' | '30d' | '1yr';
 }
 
 type TimePeriod = '1d' | '7d' | '30d' | '1yr';
 
-export default function TopTable({ activeTab = 'all' }: TopTableProps) {
+export default function TopTable({ activeTab = 'all', timePeriod = '30d' }: TopTableProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('30d');
 
   // Calculate yield payout based on price and annual yield
   const calculateYieldPayout = (price: number, annualYield: number, period: TimePeriod) => {
@@ -90,11 +90,6 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
   if (loading) {
     return (
       <div className="bg-secondary rounded-lg pt-4 px-4 overflow-x-auto">
-        <div className="flex justify-end mb-4 gap-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="w-12 h-8 bg-gray-700 rounded animate-pulse" />
-          ))}
-        </div>
         <table className="min-w-full">
           <thead>
             <tr className="text-left text-gray-400 text-sm">
@@ -137,23 +132,6 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
 
   return (
     <div className="bg-secondary rounded-lg pt-4 px-4 overflow-x-auto">
-      {/* Time Period Selector */}
-      <div className="flex justify-end mb-4 gap-2">
-        {(['1d', '7d', '30d', '1yr'] as TimePeriod[]).map((period) => (
-          <button
-            key={period}
-            onClick={() => setTimePeriod(period)}
-            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-              timePeriod === period
-                ? 'bg-[#4459FF] text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}
-          >
-            {period}
-          </button>
-        ))}
-      </div>
-
       <table className="min-w-full">
         <thead>
           <tr className="text-left text-gray-400 text-sm">

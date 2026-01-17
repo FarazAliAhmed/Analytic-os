@@ -14,6 +14,7 @@ export default function DashboardContainer() {
     const [showFilters, setShowFilters] = useState(false);
     const [showSearchDropdown, setShowSearchDropdown] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
+    const [timePeriod, setTimePeriod] = useState<'1d' | '7d' | '30d' | '1yr'>('30d');
     const [tokenCount, setTokenCount] = useState(0);
     const searchDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -98,8 +99,11 @@ export default function DashboardContainer() {
                 <TrendingStartups />
             </section>
             <section className="mt-8">
-                <Tabs onTabChange={setActiveTab} />
-                <TopTable activeTab={activeTab} />
+                <Tabs 
+                    onTabChange={setActiveTab} 
+                    onTimePeriodChange={setTimePeriod}
+                />
+                <TopTable activeTab={activeTab} timePeriod={timePeriod} />
             </section>
             <FiltersDropdown
                 id="filters-dropdown"

@@ -9,26 +9,29 @@ interface OverviewCardProps {
 }
 
 type Currency = 'NGN' | 'USDT';
+type TradeType = 'buy' | 'sell';
 
 const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSymbol = 'INV' }) => {
   const [amount, setAmount] = useState('');
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(1500);
+  const [tokenData, setTokenData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [currency, setCurrency] = useState<Currency>('NGN');
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [tradeType, setTradeType] = useState<TradeType>('buy');
 
-  // USDT to NGN exchange rate (you can fetch this from an API)
-  const USDT_TO_NGN = 1650; // Example rate
+  const USDT_TO_NGN = 1650;
 
-  const tokensReceived = amount ? Math.floor(parseFloat(amount) / (currency === 'NGN' ? tokenPrice : tokenPrice / USDT_TO_NGN)) : 0;
+  const tokensAmount = amount ? parseFloat(amount) : 0;
 
-  // Fetch token balance and price
   useEffect(() => {
     const fetchTokenData = async () => {
       try {
+        setError(''); // Clear any previous errors
+        
         const balanceRes = await fetch(`/api/token/balance?symbol=${tokenSymbol}`);
         const balanceData = await balanceRes.json();
         if (balanceData.success && balanceData.holdings) {
@@ -41,14 +44,27 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           const token = tokensData.tokens.find((t: any) => t.symbol === tokenSymbol);
           if (token) {
             setTokenPrice(token.price / 100);
+            setTokenData(token);
+            setError(''); // Clear error if token found
+          } else {
+            setError('Token not found');
           }
         }
       } catch (err) {
         console.error('Failed to fetch token data:', err);
+        setError('Failed to load token data');
       }
     };
     fetchTokenData();
   }, [tokenSymbol]);
+
+  const handleTrade = async () => {
+    if (tradeType === 'buy') {
+      await handleBuy();
+    } else {
+      await handleSell();
+    }
+  };
 
   const handleBuy = async () => {
     const inputAmount = parseFloat(amount);
@@ -89,9 +105,56 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
     }
   };
 
+  const handleSell = async () => {
+    const tokensToSell = parseFloat(amount);
+    
+    if (!tokensToSell || tokensToSell <= 0) {
+      setError('Please enter a valid amount');
+      return;
+    }
+
+    if (tokensToSell > tokenBalance) {
+      setError(`You only have ${tokenBalance} ${tokenSymbol} tokens`);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/token/sell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          tokenSymbol,
+          tokensToSell 
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const nairaReceived = data.sale.nairaReceived;
+        const displayAmount = currency === 'NGN' 
+          ? `₦${nairaReceived.toLocaleString('en-NG')}` 
+          : `$${(nairaReceived / USDT_TO_NGN).toFixed(2)}`;
+        setSuccessMessage(`Sale successful! ${tokensToSell} ${tokenSymbol} sold for ${displayAmount}`);
+        setTokenBalance(data.sale.newTokenBalance);
+        setAmount('');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setError(data.error || 'Sale failed');
+      }
+    } catch (err) {
+      setError('Sale failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatCurrency = (value: number) => {
     if (currency === 'NGN') {
-      return `₦${value.toLocaleString('en-NG')}`;
+      return `₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else {
       return `$${(value / USDT_TO_NGN).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
@@ -108,76 +171,141 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
   const getCurrencySymbol = () => currency === 'NGN' ? '₦' : '$';
   const getCurrencyLabel = () => currency === 'NGN' ? 'Naira' : 'USDT';
 
+  const getEstimatedValue = () => {
+    if (!amount) return '0';
+    if (tradeType === 'buy') {
+      const tokens = Math.floor(tokensAmount / (currency === 'NGN' ? tokenPrice : tokenPrice / USDT_TO_NGN));
+      return `${tokens} ${tokenSymbol}`;
+    } else {
+      const value = tokensAmount * tokenPrice;
+      return formatCurrency(value);
+    }
+  };
+
   return (
-    <div className="bg-[#151517] rounded-lg p-4 text-gray-200">
-      <div className="flex items-center mb-4">
-        <span className="text-base font-semibold mr-2">Overview</span>
-        <FiInfo className="text-gray-400" size={16} />
+    <div className="bg-[#151517] rounded-lg p-3 text-gray-200">
+      <div className="flex items-center mb-3">
+        <span className="text-sm font-semibold mr-2">Overview</span>
+        <FiInfo className="text-gray-400" size={14} />
       </div>
 
       {/* Token Holdings */}
-      <div className="mb-4 p-3 bg-[#181A20] rounded-lg">
-        <div className="text-gray-400 text-sm">Your Holdings</div>
-        <div className="text-white font-bold text-xl">{tokenBalance} {tokenSymbol}</div>
+      <div className="mb-3 p-2 bg-[#181A20] rounded-lg">
+        <div className="text-gray-400 text-xs">Your Holdings</div>
+        <div className="text-white font-bold text-lg">{tokenBalance} {tokenSymbol}</div>
         {tokenBalance > 0 && (
-          <div className="text-gray-400 text-sm mt-1">
+          <div className="text-gray-400 text-xs mt-0.5">
             Value: {formatCurrency(tokenBalance * tokenPrice)}
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 text-sm">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3 text-xs">
         <div>
           <div className="text-gray-400">Price per Unit</div>
           <div className="font-semibold text-white">{formatCurrency(tokenPrice)}</div>
         </div>
         <div>
-          <div className="text-gray-400">Market Cap</div>
-          <div className="font-semibold text-white">₦83.2m</div>
+          <div className="text-gray-400">Annual Yield</div>
+          <div className="font-semibold text-white">
+            {tokenData ? `${tokenData.annualYield}%` : '---'}
+          </div>
         </div>
         <div>
           <div className="text-gray-400">Volume</div>
-          <div className="font-semibold text-white">₦302,400</div>
+          <div className="font-semibold text-white">
+            {tokenData ? `₦${(tokenData.volume / 100).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---'}
+          </div>
         </div>
         <div>
-          <div className="text-gray-400">TSPv</div>
-          <div className="font-semibold text-white">₦3.2m</div>
+          <div className="text-gray-400">Yield Payout</div>
+          <div className="font-semibold text-white">
+            {tokenData ? `₦${((tokenData.price / 100) * (tokenData.annualYield / 100)).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---'}
+          </div>
         </div>
         <div>
           <div className="text-gray-400">Transactions</div>
-          <div className="font-semibold text-white">289</div>
+          <div className="font-semibold text-white">{tokenData?.transactionCount || 0}</div>
         </div>
         <div>
           <div className="text-gray-400">Liquidity</div>
-          <div className="font-semibold text-white">289</div>
+          <div className="font-semibold text-white">{tokenData?.transactionCount || 0}</div>
         </div>
-        <div className="col-span-1">
+        <div>
           <div className="text-gray-400">Date of Listing</div>
-          <div className="font-semibold text-white">May 23, 2025</div>
+          <div className="font-semibold text-white">
+            {tokenData?.listingDate 
+              ? new Date(tokenData.listingDate).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })
+              : '---'
+            }
+          </div>
         </div>
-        <div className="col-span-1">
+        <div>
           <div className="text-gray-400">Contract Address</div>
-          <div className="font-semibold text-white text-xs break-all">0xe54d08a...bfd4b</div>
+          <div className="font-semibold text-white text-[10px] font-mono break-all">
+            {tokenData?.contractAddress 
+              ? `${tokenData.contractAddress.slice(0, 10)}...${tokenData.contractAddress.slice(-5)}`
+              : '---'
+            }
+          </div>
         </div>
       </div>
 
       {/* Success Message */}
       {successMessage && (
-        <div className="mb-3 p-2 bg-green-500/20 text-green-400 text-sm rounded text-center">
+        <div className="mb-2 p-1.5 bg-green-500/20 text-green-400 text-xs rounded text-center">
           {successMessage}
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="mb-3 p-2 bg-red-500/20 text-red-400 text-sm rounded text-center">
+        <div className="mb-2 p-1.5 bg-red-500/20 text-red-400 text-xs rounded text-center">
           {error}
         </div>
       )}
 
+      {/* Buy/Sell Toggle */}
+      <div className="flex gap-2 mb-2">
+        <button
+          onClick={() => {
+            setTradeType('buy');
+            setAmount('');
+            setError('');
+          }}
+          className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+            tradeType === 'buy'
+              ? 'bg-[#4459FF] text-white'
+              : 'bg-[#181A20] text-gray-400 hover:bg-[#353945]'
+          }`}
+        >
+          Buy
+        </button>
+        <button
+          onClick={() => {
+            setTradeType('sell');
+            setAmount('');
+            setError('');
+          }}
+          className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+            tradeType === 'sell'
+              ? 'bg-[#FF4D4F] text-white'
+              : 'bg-[#181A20] text-gray-400 hover:bg-[#353945]'
+          }`}
+        >
+          Sell
+        </button>
+      </div>
+
       {/* Amount Input */}
-      <div className="mb-2">
-        <label className="block text-xs mb-1">Amount</label>
+      <div className="mb-1.5">
+        <label className="block text-xs mb-1">
+          {tradeType === 'buy' ? 'Amount' : 'Tokens to Sell'}
+        </label>
         <div className="relative">
           <input
             type="number"
@@ -187,99 +315,139 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
               setError('');
               setSuccessMessage('');
             }}
-            className="w-full bg-[#181A20] border border-[#353945] rounded px-2 py-2 pr-24 text-white text-sm focus:outline-none focus:border-[#4459FF]"
+            className="w-full bg-[#181A20] border border-[#353945] rounded px-2 py-1.5 pr-24 text-white text-sm focus:outline-none focus:border-[#4459FF]"
             placeholder="0"
           />
-          {/* Currency Dropdown */}
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <button
-              onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
-              className="flex items-center gap-1 bg-[#353945] px-2 py-1 rounded text-xs hover:bg-[#404550] transition-colors"
-            >
-              <span className={`font-bold ${currency === 'NGN' ? 'text-green-400' : 'text-blue-400'}`}>
-                {getCurrencySymbol()}
-              </span>
-              <span className="text-white">{getCurrencyLabel()}</span>
-              <FiChevronDown className="text-gray-400" size={12} />
-            </button>
-            
-            {/* Dropdown Menu */}
-            {showCurrencyDropdown && (
-              <div className="absolute right-0 top-full mt-1 bg-[#1A1A1A] border border-[#353945] rounded shadow-lg z-10 min-w-[100px]">
-                <button
-                  onClick={() => {
-                    setCurrency('NGN');
-                    setShowCurrencyDropdown(false);
-                    setAmount('');
-                  }}
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-[#353945] transition-colors ${
-                    currency === 'NGN' ? 'bg-[#353945] text-green-400' : 'text-white'
-                  }`}
-                >
-                  <span className="font-bold">₦</span> Naira
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrency('USDT');
-                    setShowCurrencyDropdown(false);
-                    setAmount('');
-                  }}
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-[#353945] transition-colors ${
-                    currency === 'USDT' ? 'bg-[#353945] text-blue-400' : 'text-white'
-                  }`}
-                >
-                  <span className="font-bold">$</span> USDT
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Currency/Token Label */}
+          {tradeType === 'buy' ? (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <button
+                onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
+                className="flex items-center gap-1 bg-[#353945] px-2 py-1 rounded text-xs hover:bg-[#404550] transition-colors"
+              >
+                <span className={`font-bold ${currency === 'NGN' ? 'text-green-400' : 'text-blue-400'}`}>
+                  {getCurrencySymbol()}
+                </span>
+                <span className="text-white">{getCurrencyLabel()}</span>
+                <FiChevronDown className="text-gray-400" size={12} />
+              </button>
+              
+              {showCurrencyDropdown && (
+                <div className="absolute right-0 top-full mt-1 bg-[#1A1A1A] border border-[#353945] rounded shadow-lg z-10 min-w-[100px]">
+                  <button
+                    onClick={() => {
+                      setCurrency('NGN');
+                      setShowCurrencyDropdown(false);
+                      setAmount('');
+                    }}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-[#353945] transition-colors ${
+                      currency === 'NGN' ? 'bg-[#353945] text-green-400' : 'text-white'
+                    }`}
+                  >
+                    <span className="font-bold">₦</span> Naira
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrency('USDT');
+                      setShowCurrencyDropdown(false);
+                      setAmount('');
+                    }}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-[#353945] transition-colors ${
+                      currency === 'USDT' ? 'bg-[#353945] text-blue-400' : 'text-white'
+                    }`}
+                  >
+                    <span className="font-bold">$</span> USDT
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#353945] px-2 py-1 rounded text-xs">
+              <span className="text-white font-semibold">{tokenSymbol}</span>
+            </div>
+          )}
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span className="text-red-500">Min: {formatCurrency(tokenPrice)}</span>
-          <span className="text-green-400">Available: {getCurrencySymbol()}{getAvailableBalance()}</span>
+          {tradeType === 'buy' ? (
+            <>
+              <span className="text-red-500">Min: {formatCurrency(tokenPrice)}</span>
+              <span className="text-green-400">Available: {getCurrencySymbol()}{getAvailableBalance()}</span>
+            </>
+          ) : (
+            <>
+              <span className="text-gray-400">You'll receive: {getEstimatedValue()}</span>
+              <span className="text-yellow-400">Available: {tokenBalance} {tokenSymbol}</span>
+            </>
+          )}
         </div>
       </div>
 
       {/* Quick Amount Buttons */}
-      <div className="flex space-x-2 mb-2">
-        {[tokenPrice, tokenPrice * 2, tokenPrice * 3, tokenPrice * 5].map((amt) => {
-          const displayAmount = currency === 'NGN' ? amt : amt / USDT_TO_NGN;
-          return (
-            <button
-              key={amt}
-              onClick={() => {
-                setAmount(displayAmount.toString());
-                setError('');
-                setSuccessMessage('');
-              }}
-              disabled={amt * 100 > walletBalance}
-              className="flex-1 bg-[#181A20] text-gray-300 rounded py-1 hover:bg-[#353945] disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium"
-            >
-              {currency === 'NGN' 
-                ? `₦${amt.toLocaleString('en-NG')}` 
-                : `$${displayAmount.toFixed(2)}`
-              }
-            </button>
-          );
-        })}
-      </div>
+      {tradeType === 'buy' ? (
+        <div className="flex space-x-1.5 mb-2">
+          {[tokenPrice, tokenPrice * 2, tokenPrice * 3, tokenPrice * 5].map((amt) => {
+            const displayAmount = currency === 'NGN' ? amt : amt / USDT_TO_NGN;
+            return (
+              <button
+                key={amt}
+                onClick={() => {
+                  setAmount(displayAmount.toString());
+                  setError('');
+                  setSuccessMessage('');
+                }}
+                disabled={amt * 100 > walletBalance}
+                className="flex-1 bg-[#181A20] text-gray-300 rounded py-1 hover:bg-[#353945] disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium"
+              >
+                {currency === 'NGN' 
+                  ? `₦${amt.toLocaleString('en-NG')}` 
+                  : `$${displayAmount.toFixed(2)}`
+                }
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex space-x-1.5 mb-2">
+          {[25, 50, 75, 100].map((percent) => {
+            const tokens = Math.floor((tokenBalance * percent) / 100);
+            return (
+              <button
+                key={percent}
+                onClick={() => {
+                  setAmount(tokens.toString());
+                  setError('');
+                  setSuccessMessage('');
+                }}
+                disabled={tokenBalance === 0}
+                className="flex-1 bg-[#181A20] text-gray-300 rounded py-1 hover:bg-[#353945] disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium"
+              >
+                {percent}%
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Buy Button */}
+      {/* Trade Button */}
       <button
-        onClick={handleBuy}
-        disabled={loading || !amount || parseFloat(amount) < (currency === 'NGN' ? tokenPrice : tokenPrice / USDT_TO_NGN)}
-        className="w-full bg-[#4459FF] hover:bg-[#3448EE] disabled:bg-[#353A45] disabled:cursor-not-allowed text-white rounded py-2 font-semibold text-base mt-2 flex items-center justify-center gap-2"
+        onClick={handleTrade}
+        disabled={loading || !amount || parseFloat(amount) <= 0}
+        className={`w-full rounded py-1.5 font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
+          tradeType === 'buy'
+            ? 'bg-[#4459FF] hover:bg-[#3448EE] disabled:bg-[#353A45]'
+            : 'bg-[#FF4D4F] hover:bg-[#E63946] disabled:bg-[#353A45]'
+        } disabled:cursor-not-allowed text-white`}
       >
         {loading ? (
           <>
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
             Processing...
           </>
         ) : (
-          'Buy'
+          tradeType === 'buy' ? 'Buy' : 'Sell'
         )}
       </button>
     </div>
