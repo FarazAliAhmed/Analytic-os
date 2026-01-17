@@ -63,7 +63,8 @@ export default function GainerRow({
             e.stopPropagation();
             return;
         }
-        router.push(`/dashboard/token`);
+        // Navigate with symbol parameter
+        router.push(`/dashboard/token?symbol=${name}`);
     }
 
     const handleWatchlistClick = (e: React.MouseEvent) => {

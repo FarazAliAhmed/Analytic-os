@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { FaRegStar } from 'react-icons/fa';
 
 interface StartupCardProps {
@@ -10,8 +13,17 @@ interface StartupCardProps {
 }
 
 export default function StartupCard({ name, symbol, price, change, logo }: StartupCardProps) {
+    const router = useRouter();
+
+    const handleClick = () => {
+        router.push(`/dashboard/token?symbol=${symbol}`);
+    };
+
     return (
-        <div className="bg-[#18191B] border border-[#232325] rounded-xl p-4 min-w-[220px] flex flex-col gap-3 shadow-sm">
+        <div 
+            onClick={handleClick}
+            className="bg-[#18191B] border border-[#232325] rounded-xl p-4 min-w-[220px] flex flex-col gap-3 shadow-sm cursor-pointer hover:border-[#3a3a3c] transition-colors"
+        >
             <div className="flex items-center justify-between w-full mb-1">
                 <div className="flex items-center gap-2">
                     <Image src={logo} alt={symbol} width={28} height={28} className="rounded-full" />
