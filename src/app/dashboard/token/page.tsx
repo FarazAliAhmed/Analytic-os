@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import ChartCard from '@/components/dashboard/token/ChartCard';
@@ -16,7 +16,7 @@ interface TokenData {
   transactionCount: number;
 }
 
-export default function Page() {
+function TokenPageContent() {
     const searchParams = useSearchParams();
     const tokenSymbol = searchParams.get('symbol'); // Get symbol from URL
     
@@ -155,5 +155,20 @@ export default function Page() {
                 <Sidebar tokenSymbol={token?.symbol} />
             </div>
         </div>
+    );
+}
+
+export default function Page() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#181A20] p-4 md:p-6">
+                <div className="animate-pulse">
+                    <div className="h-16 bg-gray-800 rounded mb-6"></div>
+                    <div className="h-96 bg-gray-800 rounded"></div>
+                </div>
+            </div>
+        }>
+            <TokenPageContent />
+        </Suspense>
     );
 }
