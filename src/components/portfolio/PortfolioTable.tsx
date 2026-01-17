@@ -49,6 +49,7 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
         </thead>
         <tbody>
           {holdings.map((holding) => {
+            const isWatchlistOnly = holding.quantity === 0
             const currentValue = holding.quantity * (holding.token.price / 100)
             const costBasis = holding.quantity * (holding.averagePrice / 100)
             const totalYield = currentValue - costBasis
@@ -88,16 +89,32 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                   <div className="text-xs text-green-400">+{holding.token.annualYield}% APY</div>
                 </td>
                 <td className="py-3 px-4">
-                  <div className="font-semibold text-white">{formatNaira(currentValue)}</div>
-                  <div className="text-xs text-gray-400">{holding.quantity} units</div>
+                  {isWatchlistOnly ? (
+                    <div className="text-gray-500 text-sm">Not purchased</div>
+                  ) : (
+                    <>
+                      <div className="font-semibold text-white">{formatNaira(currentValue)}</div>
+                      <div className="text-xs text-gray-400">{holding.quantity} units</div>
+                    </>
+                  )}
                 </td>
                 <td className="py-3 px-4">
-                  <div className="font-semibold text-white">{formatNaira(holding.averagePrice / 100)}</div>
-                  <div className="text-xs text-gray-400">per unit</div>
+                  {isWatchlistOnly ? (
+                    <div className="text-gray-500 text-sm">---</div>
+                  ) : (
+                    <>
+                      <div className="font-semibold text-white">{formatNaira(holding.averagePrice / 100)}</div>
+                      <div className="text-xs text-gray-400">per unit</div>
+                    </>
+                  )}
                 </td>
                 <td className="py-3 px-4">
-                  <div className={`font-semibold ${totalYield >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {totalYield >= 0 ? '+' : ''}{formatNaira(totalYield)}
+                  {isWatchlistOnly ? (
+                    <div className="text-gray-500 text-sm">---</div>
+                  ) : (
+                    <>
+                      <div className={`font-semibold ${totalYield >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {totalYield >= 0 ? '+' : ''}{formatNaira(totalYield)}
                   </div>
                   <div className={`text-xs ${yieldPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {yieldPercent >= 0 ? '+' : ''}{yieldPercent.toFixed(2)}%

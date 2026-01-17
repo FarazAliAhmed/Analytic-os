@@ -228,10 +228,6 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           <div className="font-semibold text-white">{tokenData?.transactionCount || 0}</div>
         </div>
         <div>
-          <div className="text-gray-400">Liquidity</div>
-          <div className="font-semibold text-white">{tokenData?.transactionCount || 0}</div>
-        </div>
-        <div>
           <div className="text-gray-400">Date of Listing</div>
           <div className="font-semibold text-white">
             {tokenData?.listingDate 

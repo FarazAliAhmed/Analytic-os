@@ -24,6 +24,7 @@ interface TokenHolding {
 export default function PortfolioHoldings() {
   const [view, setView] = useState<'all' | 'watchlist'>('all')
   const [holdings, setHoldings] = useState<TokenHolding[]>([])
+  const [watchlistItems, setWatchlistItems] = useState<any[]>([])
   const [watchlistIds, setWatchlistIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -39,11 +40,13 @@ export default function PortfolioHoldings() {
         setHoldings(data.holdings || [])
       }
 
-      // Fetch watchlist IDs
-      const watchlistRes = await fetch('/api/watchlist/ids')
+      // Fetch full watchlist with token details
+      const watchlistRes = await fetch('/api/watchlist')
       if (watchlistRes.ok) {
         const data = await watchlistRes.json()
-        setWatchlistIds(data.tokenIds || [])
+        const items = data.items || []
+        setWatchlistItems(items)
+        setWatchlistIds(items.map((item: any) => item.tokenId))
       }
     } catch (error) {
       console.error('Failed to fetch data:', error)
@@ -63,15 +66,37 @@ export default function PortfolioHoldings() {
     } else {
       setWatchlistIds(prev => prev.filter(id => id !== tokenId))
     }
+    // Refetch to update watchlist items
+    fetchData()
   }
+
+  // Convert watchlist items to holdings format for display
+  const watchlistAsHoldings = watchlistItems
+    .filter(item => item.token) // Only include items with valid token data
+    .map(item => ({
+      id: item.id,
+      tokenId: item.tokenId,
+      quantity: 0, // Watchlist items don't have quantity
+      averagePrice: 0, // Watchlist items don't have purchase price
+      token: {
+        id: item.token.id,
+        name: item.token.name,
+        symbol: item.token.symbol,
+        price: item.token.price,
+        annualYield: item.token.annualYield,
+        industry: item.token.industry,
+        riskLevel: item.token.riskLevel,
+        logoUrl: item.token.logoUrl
+      }
+    }))
 
   // Filter holdings based on view
   const displayedHoldings = view === 'all'
     ? holdings
-    : holdings.filter(h => watchlistIds.includes(h.tokenId))
+    : watchlistAsHoldings
 
   const allTokensCount = holdings.length
-  const watchlistCount = holdings.filter(h => watchlistIds.includes(h.tokenId)).length
+  const watchlistCount = watchlistItems.length
 
   if (loading) {
     return (

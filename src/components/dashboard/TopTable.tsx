@@ -100,7 +100,7 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d' }: TopT
               <th className="py-3 px-4">Annual Yield</th>
               <th className="py-3 px-4">Yield Payout</th>
               <th className="py-3 px-4">Volume</th>
-              <th className="py-3 px-4">30 day</th>
+              <th className="py-3 px-4">{timePeriod}</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +142,7 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d' }: TopT
             <th className="py-3 px-4">Annual Yield</th>
             <th className="py-3 px-4">Yield Payout</th>
             <th className="py-3 px-4">Volume</th>
-            <th className="py-3 px-4">30 day</th>
+            <th className="py-3 px-4">{timePeriod}</th>
           </tr>
         </thead>
         <tbody>

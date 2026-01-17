@@ -1,18 +1,21 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-const holders = [
-    { rank: 1, address: 'HJ...k6c', percent: 2.29, amount: 22.9, value: '₦1.6m' },
-    { rank: 2, address: '6Gp...EkUX', percent: 3.5, amount: 22.9, value: '₦1.52m' },
-    { rank: 3, address: 'Buy', percent: 4.2, amount: 22.9, value: '₦1.08m' },
-    { rank: 4, address: 'Buy', percent: 6.28, amount: 22.9, value: '₦1.06m' },
-];
+interface Holder {
+    rank: number
+    userId: string
+    percent: number
+    amount: number
+    value: number
+    valueFormatted: string
+}
 
 const TABS = [
     { label: 'Transactions' },
     { label: 'My Orders' },
-    { label: 'Holders (401)' },
+    { label: 'Holders' },
     { label: 'About' },
 ];
 
@@ -50,9 +53,14 @@ interface TokenData {
 }
 
 const TransactionsTabs: React.FC = () => {
+    const searchParams = useSearchParams();
+    const tokenSymbol = searchParams.get('symbol') || 'NG';
+    
     const [activeTab, setActiveTab] = useState(0);
     const [allTransactions, setAllTransactions] = useState<AllTransaction[]>([]);
     const [myTransactions, setMyTransactions] = useState<Transaction[]>([]);
+    const [holders, setHolders] = useState<Holder[]>([]);
+    const [totalHolders, setTotalHolders] = useState(0);
     const [tokenData, setTokenData] = useState<TokenData | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -61,10 +69,12 @@ const TransactionsTabs: React.FC = () => {
             fetchAllTransactions();
         } else if (activeTab === 1) {
             fetchMyTransactions();
+        } else if (activeTab === 2) {
+            fetchHolders();
         } else if (activeTab === 3) {
             fetchTokenData();
         }
-    }, [activeTab]);
+    }, [activeTab, tokenSymbol]);
 
     const fetchTokenData = async () => {
         setLoading(true);
@@ -72,7 +82,7 @@ const TransactionsTabs: React.FC = () => {
             const res = await fetch('/api/tokens');
             const data = await res.json();
             if (data.success && data.tokens && data.tokens.length > 0) {
-                const token = data.tokens[0];
+                const token = data.tokens.find((t: any) => t.symbol === tokenSymbol) || data.tokens[0];
                 setTokenData({
                     symbol: token.symbol,
                     name: token.name,
@@ -87,6 +97,22 @@ const TransactionsTabs: React.FC = () => {
             }
         } catch (err) {
             console.error('Failed to fetch token data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchHolders = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/token/holders?symbol=${tokenSymbol}`);
+            const data = await res.json();
+            if (data.success) {
+                setHolders(data.holders);
+                setTotalHolders(data.totalHolders);
+            }
+        } catch (err) {
+            console.error('Failed to fetch holders:', err);
         } finally {
             setLoading(false);
         }
@@ -146,7 +172,7 @@ const TransactionsTabs: React.FC = () => {
                             }`}
                         onClick={() => setActiveTab(idx)}
                     >
-                        {tab.label}
+                        {idx === 2 ? `Holders (${totalHolders})` : tab.label}
                     </button>
                 ))}
             </div>
@@ -227,36 +253,34 @@ const TransactionsTabs: React.FC = () => {
                 )}
                 {activeTab === 2 && (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
-                            <thead>
-                                <tr className="text-gray-500 text-xs uppercase">
-                                    <th className="py-3 px-4 font-normal">Rank</th>
-                                    <th className="py-3 px-4 font-normal">User ID</th>
-                                    <th className="py-3 px-4 font-normal">%</th>
-                                    <th className="py-3 px-4 font-normal">Amount</th>
-                                    <th className="py-3 px-4 font-normal">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {holders.map((h, i) => (
-                                    <tr key={i} className="border-t border-[#23262F]">
-                                        <td className="py-3 px-4 text-white font-semibold">#{h.rank}</td>
-                                        <td className="py-3 px-4 text-white">{h.address}</td>
-                                        <td className="py-3 px-4 text-white">{h.percent}%</td>
-                                        <td className="py-3 px-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-white">{h.amount}M</span>
-                                                <div className="w-32 h-2 bg-[#23262F] rounded-full overflow-hidden">
-                                                    <div className="h-2 bg-white rounded-full" style={{ width: `${h.percent * 10}%` }} />
-                                                </div>
-                                                <span className="text-gray-500">999.9M</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-4 text-white font-bold text-right">{h.value}</td>
+                        {loading ? (
+                            <div className="text-center text-gray-400 py-8">Loading holders...</div>
+                        ) : holders.length === 0 ? (
+                            <div className="text-center text-gray-400 py-8">No holders found</div>
+                        ) : (
+                            <table className="min-w-full text-left text-sm">
+                                <thead>
+                                    <tr className="text-gray-500 text-xs uppercase">
+                                        <th className="py-3 px-4 font-normal">Rank</th>
+                                        <th className="py-3 px-4 font-normal">User ID</th>
+                                        <th className="py-3 px-4 font-normal">%</th>
+                                        <th className="py-3 px-4 font-normal">Amount</th>
+                                        <th className="py-3 px-4 font-normal">Value</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {holders.map((h) => (
+                                        <tr key={h.rank} className="border-t border-[#23262F]">
+                                            <td className="py-3 px-4 text-white font-semibold">#{h.rank}</td>
+                                            <td className="py-3 px-4 text-white">{h.userId}</td>
+                                            <td className="py-3 px-4 text-white">{h.percent}%</td>
+                                            <td className="py-3 px-4 text-white">{h.amount}</td>
+                                            <td className="py-3 px-4 text-white font-bold text-right">{h.valueFormatted}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 )}
                 {activeTab === 3 && (
