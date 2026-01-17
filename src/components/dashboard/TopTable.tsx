@@ -17,9 +17,37 @@ interface TopTableProps {
   activeTab?: string;
 }
 
+type TimePeriod = '1d' | '7d' | '30d' | '1yr';
+
 export default function TopTable({ activeTab = 'all' }: TopTableProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('30d');
+
+  // Calculate yield payout based on price and annual yield
+  const calculateYieldPayout = (price: number, annualYield: number, period: TimePeriod) => {
+    const priceInNaira = price / 100; // Convert from kobo to Naira
+    const annualYieldDecimal = annualYield / 100;
+    
+    let periodMultiplier = 0;
+    switch (period) {
+      case '1d':
+        periodMultiplier = 1 / 365;
+        break;
+      case '7d':
+        periodMultiplier = 7 / 365;
+        break;
+      case '30d':
+        periodMultiplier = 30 / 365;
+        break;
+      case '1yr':
+        periodMultiplier = 1;
+        break;
+    }
+    
+    // Yield payout = Price × Annual Yield × Period Multiplier
+    return priceInNaira * annualYieldDecimal * periodMultiplier;
+  };
 
   useEffect(() => {
     const fetchTokens = async () => {
@@ -62,6 +90,11 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
   if (loading) {
     return (
       <div className="bg-secondary rounded-lg pt-4 px-4 overflow-x-auto">
+        <div className="flex justify-end mb-4 gap-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="w-12 h-8 bg-gray-700 rounded animate-pulse" />
+          ))}
+        </div>
         <table className="min-w-full">
           <thead>
             <tr className="text-left text-gray-400 text-sm">
@@ -70,8 +103,9 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
               <th className="py-3 px-4">Price</th>
               <th className="py-3 px-4">Industry</th>
               <th className="py-3 px-4">Annual Yield</th>
+              <th className="py-3 px-4">Yield Payout</th>
               <th className="py-3 px-4">Volume</th>
-              <th className="py-3 px-4">Last 7d</th>
+              <th className="py-3 px-4">30 day</th>
             </tr>
           </thead>
           <tbody>
@@ -82,6 +116,7 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
                 <td className="py-3 px-4"><div className="h-4 w-16 bg-gray-700 rounded" /></td>
                 <td className="py-3 px-4"><div className="h-4 w-20 bg-gray-700 rounded" /></td>
                 <td className="py-3 px-4"><div className="h-4 w-12 bg-gray-700 rounded" /></td>
+                <td className="py-3 px-4"><div className="h-4 w-16 bg-gray-700 rounded" /></td>
                 <td className="py-3 px-4"><div className="h-4 w-20 bg-gray-700 rounded" /></td>
                 <td className="py-3 px-4"><div className="h-4 w-16 bg-gray-700 rounded" /></td>
               </tr>
@@ -102,6 +137,23 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
 
   return (
     <div className="bg-secondary rounded-lg pt-4 px-4 overflow-x-auto">
+      {/* Time Period Selector */}
+      <div className="flex justify-end mb-4 gap-2">
+        {(['1d', '7d', '30d', '1yr'] as TimePeriod[]).map((period) => (
+          <button
+            key={period}
+            onClick={() => setTimePeriod(period)}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              timePeriod === period
+                ? 'bg-[#4459FF] text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            {period}
+          </button>
+        ))}
+      </div>
+
       <table className="min-w-full">
         <thead>
           <tr className="text-left text-gray-400 text-sm">
@@ -110,26 +162,31 @@ export default function TopTable({ activeTab = 'all' }: TopTableProps) {
             <th className="py-3 px-4">Price</th>
             <th className="py-3 px-4">Industry</th>
             <th className="py-3 px-4">Annual Yield</th>
+            <th className="py-3 px-4">Yield Payout</th>
             <th className="py-3 px-4">Volume</th>
-            <th className="py-3 px-4">Last 7d</th>
+            <th className="py-3 px-4">30 day</th>
           </tr>
         </thead>
         <tbody>
-          {tokens.map((token) => (
-            <GainerRow
-              key={token.id}
-              logo={token.logoUrl || '/icons/weth.svg'}
-              name={token.symbol}
-              company={token.name}
-              price={token.price / 100}
-              change={0}
-              industry={token.industry}
-              annualYield={`${token.annualYield}%`}
-              marketCap={`₦${token.volume.toLocaleString()}`}
-              chart="/icons/chart.svg"
-              tokenId={token.symbol}
-            />
-          ))}
+          {tokens.map((token) => {
+            const yieldPayout = calculateYieldPayout(token.price, token.annualYield, timePeriod);
+            return (
+              <GainerRow
+                key={token.id}
+                logo={token.logoUrl || '/icons/weth.svg'}
+                name={token.symbol}
+                company={token.name}
+                price={token.price / 100}
+                change={0}
+                industry={token.industry}
+                annualYield={`${token.annualYield}%`}
+                yieldPayout={`₦${yieldPayout.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                marketCap={`₦${token.volume.toLocaleString()}`}
+                chart="/icons/chart.svg"
+                tokenId={token.symbol}
+              />
+            );
+          })}
         </tbody>
       </table>
     </div>

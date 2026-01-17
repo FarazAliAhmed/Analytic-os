@@ -13,6 +13,7 @@ interface GainerRowProps {
     change: number;
     industry: string;
     annualYield: string;
+    yieldPayout?: string;
     marketCap: string;
     chart: string;
     tokenId?: string;
@@ -25,7 +26,8 @@ export default function GainerRow({
     price, 
     change, 
     industry, 
-    annualYield, 
+    annualYield,
+    yieldPayout,
     marketCap, 
     chart,
     tokenId 
@@ -96,6 +98,7 @@ export default function GainerRow({
             </td>
             <td className="py-3 px-4">{industry}</td>
             <td className="py-3 px-4">{annualYield}</td>
+            <td className="py-3 px-4 text-green-400 font-semibold">{yieldPayout || '---'}</td>
             <td className="py-3 px-4">{marketCap}</td>
             <td className="py-3 px-4">
                 <Image src={chart} alt="chart" className="h-8" />
