@@ -9,6 +9,9 @@ interface TokenHolding {
   tokenId: string
   quantity: number
   averagePrice: number
+  totalInvested: number
+  accumulatedYield: number
+  lastYieldUpdate: Date
   token: {
     id: string
     name: string
@@ -78,6 +81,9 @@ export default function PortfolioHoldings() {
       tokenId: item.tokenId,
       quantity: 0, // Watchlist items don't have quantity
       averagePrice: 0, // Watchlist items don't have purchase price
+      totalInvested: 0, // Watchlist items don't have investment
+      accumulatedYield: 0, // Watchlist items don't have yield
+      lastYieldUpdate: new Date(), // Current date for watchlist items
       token: {
         id: item.token.id,
         name: item.token.name,

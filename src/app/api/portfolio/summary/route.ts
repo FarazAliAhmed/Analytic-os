@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { calculateYield } from '@/lib/yield-calculator'
+import { calculateAccumulatedYield } from '@/lib/yield-calculator'
 
 interface PortfolioSummaryResponse {
   success: boolean
@@ -78,7 +78,7 @@ export async function GET(): Promise<NextResponse<PortfolioSummaryResponse>> {
     let totalYield = 0
     for (const purchase of purchases) {
       const annualYield = tokenYieldMap.get(purchase.tokenId) ?? 0
-      const yieldAmount = calculateYield(
+      const yieldAmount = calculateAccumulatedYield(
         purchase.nairaAmountSpent,
         annualYield,
         purchase.createdAt
