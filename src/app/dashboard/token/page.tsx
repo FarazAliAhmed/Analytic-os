@@ -75,6 +75,7 @@ function TokenPageContent() {
                             price: tokenData.price,
                             change: tokenData.annualYield,
                             percentChange: tokenData.annualYield * 0.01,
+                            annualYield: tokenData.annualYield,
                             isInWatchlist: inWatchlist
                         });
                     }

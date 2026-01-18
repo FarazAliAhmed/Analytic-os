@@ -29,7 +29,7 @@ export default function Header({
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
 
   // Get token data from context
-  const { tokenSymbol, tokenPrice, tokenChange, tokenPercentChange, isInWatchlist, toggleWatchlist } = useToken()
+  const { tokenSymbol, tokenPrice, tokenChange, tokenPercentChange, annualYield, isInWatchlist, toggleWatchlist } = useToken()
 
   // Determine page title based on pathname
   const getPageTitle = () => {
@@ -122,17 +122,12 @@ export default function Header({
               {getPageTitle()}
             </h1>
             
-            {/* Price - Only show if on token page */}
-            {tokenSymbol && tokenPrice && (
+            {/* Annual Yield - Only show if on token page */}
+            {tokenSymbol && annualYield !== null && (
               <div className="flex flex-col items-start">
                 <div className="text-lg font-bold text-[#C8FF00]">
-                  {tokenPrice.toLocaleString('en-NG', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                  {annualYield}%
                 </div>
-                {tokenChange !== undefined && tokenPercentChange !== undefined && (
-                  <div className="text-xs text-[#C8FF00]">
-                    {tokenChange.toFixed(2)} +{tokenPercentChange.toFixed(2)}%
-                  </div>
-                )}
               </div>
             )}
           </div>

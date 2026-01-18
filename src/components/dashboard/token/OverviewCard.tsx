@@ -18,6 +18,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(1500);
   const [tokenData, setTokenData] = useState<any>(null);
+  const [yieldPayout, setYieldPayout] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true); // Add loading state for initial data fetch
   const [error, setError] = useState('');
@@ -50,6 +51,13 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
             setTokenPrice(token.price / 100);
             setTokenData(token);
           }
+        }
+
+        // Fetch yield payout for 30d period (default)
+        const yieldRes = await fetch('/api/tokens/yield-payouts?period=30d');
+        const yieldData = await yieldRes.json();
+        if (yieldData.success && yieldData.yieldPayouts) {
+          setYieldPayout(yieldData.yieldPayouts[tokenSymbol] || 0);
         }
       } catch (err) {
         console.error('Failed to fetch token data:', err);
@@ -250,7 +258,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
         <div>
           <div className="text-gray-400">Yield Payout</div>
           <div className="font-semibold text-white">
-            {tokenData ? formatCurrency((tokenData.price / 100) * (tokenData.annualYield / 100)) : '---'}
+            {formatCurrency(yieldPayout)}
           </div>
         </div>
         <div>

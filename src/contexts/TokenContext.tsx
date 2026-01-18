@@ -7,12 +7,14 @@ interface TokenContextType {
   tokenPrice: number | null
   tokenChange: number | null
   tokenPercentChange: number | null
+  annualYield: number | null
   isInWatchlist: boolean
   setTokenData: (data: {
     symbol: string
     price: number
     change?: number
     percentChange?: number
+    annualYield?: number
     isInWatchlist?: boolean
   }) => void
   clearTokenData: () => void
@@ -26,6 +28,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
   const [tokenPrice, setTokenPrice] = useState<number | null>(null)
   const [tokenChange, setTokenChange] = useState<number | null>(null)
   const [tokenPercentChange, setTokenPercentChange] = useState<number | null>(null)
+  const [annualYield, setAnnualYield] = useState<number | null>(null)
   const [isInWatchlist, setIsInWatchlist] = useState(false)
 
   const setTokenData = useCallback((data: {
@@ -33,12 +36,14 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     price: number
     change?: number
     percentChange?: number
+    annualYield?: number
     isInWatchlist?: boolean
   }) => {
     setTokenSymbol(data.symbol)
     setTokenPrice(data.price)
     setTokenChange(data.change || null)
     setTokenPercentChange(data.percentChange || null)
+    setAnnualYield(data.annualYield || null)
     setIsInWatchlist(data.isInWatchlist || false)
   }, [])
 
@@ -47,6 +52,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     setTokenPrice(null)
     setTokenChange(null)
     setTokenPercentChange(null)
+    setAnnualYield(null)
     setIsInWatchlist(false)
   }, [])
 
@@ -79,6 +85,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
         tokenPrice,
         tokenChange,
         tokenPercentChange,
+        annualYield,
         isInWatchlist,
         setTokenData,
         clearTokenData,

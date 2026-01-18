@@ -13,6 +13,10 @@ interface Token {
   listingDate: string;
 }
 
+interface YieldPayouts {
+  [tokenSymbol: string]: number;
+}
+
 interface TopTableProps {
   activeTab?: string;
   timePeriod?: '1d' | '7d' | '30d' | '1yr';
@@ -24,40 +28,22 @@ type TimePeriod = '1d' | '7d' | '30d' | '1yr';
 
 export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchlistIds, onWatchlistToggle }: TopTableProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [yieldPayouts, setYieldPayouts] = useState<YieldPayouts>({});
   const [loading, setLoading] = useState(true);
 
-  // Calculate yield payout based on price and annual yield
-  const calculateYieldPayout = (price: number, annualYield: number, period: TimePeriod) => {
-    const priceInNaira = price / 100; // Convert from kobo to Naira
-    const annualYieldDecimal = annualYield / 100;
-    
-    let periodMultiplier = 0;
-    switch (period) {
-      case '1d':
-        periodMultiplier = 1 / 365;
-        break;
-      case '7d':
-        periodMultiplier = 7 / 365;
-        break;
-      case '30d':
-        periodMultiplier = 30 / 365;
-        break;
-      case '1yr':
-        periodMultiplier = 1;
-        break;
-    }
-    
-    // Yield payout = Price × Annual Yield × Period Multiplier
-    return priceInNaira * annualYieldDecimal * periodMultiplier;
-  };
-
   useEffect(() => {
-    const fetchTokens = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/tokens');
-        const data = await res.json();
-        if (data.success) {
-          let filtered = [...data.tokens];
+        // Fetch tokens
+        const tokensRes = await fetch('/api/tokens');
+        const tokensData = await tokensRes.json();
+        
+        // Fetch yield payouts for the selected period
+        const yieldRes = await fetch(`/api/tokens/yield-payouts?period=${timePeriod}`);
+        const yieldData = await yieldRes.json();
+        
+        if (tokensData.success) {
+          let filtered = [...tokensData.tokens];
           
           // Filter based on active tab
           if (activeTab === 'volume') {
@@ -79,15 +65,19 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
           
           setTokens(filtered.slice(0, 20));
         }
+        
+        if (yieldData.success) {
+          setYieldPayouts(yieldData.yieldPayouts);
+        }
       } catch (error) {
-        console.error('Failed to fetch tokens:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTokens();
-  }, [activeTab]);
+    fetchData();
+  }, [activeTab, timePeriod]); // Re-fetch when timePeriod changes
 
   if (loading) {
     return (
@@ -149,7 +139,9 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
         </thead>
         <tbody>
           {tokens.map((token) => {
-            const yieldPayout = calculateYieldPayout(token.price, token.annualYield, timePeriod);
+            // Get real yield payout from API data, fallback to 0
+            const yieldPayout = yieldPayouts[token.symbol] || 0;
+            
             return (
               <GainerRow
                 key={token.id}
@@ -160,9 +152,9 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
                 change={0}
                 industry={token.industry}
                 annualYield={`${token.annualYield}%`}
-                yieldPayout={`₦${yieldPayout.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                yieldPayout={`₦${Math.round(yieldPayout).toLocaleString('en-NG')}`}
                 marketCap={`₦${token.volume.toLocaleString()}`}
-                chart="/icons/chart.svg"
+                chart="/icons/chart.svg"}
                 tokenId={token.symbol}
                 initialIsInWatchlist={watchlistIds.includes(token.symbol)}
                 onWatchlistToggle={onWatchlistToggle}
