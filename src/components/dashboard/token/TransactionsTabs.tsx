@@ -275,7 +275,7 @@ const TransactionsTabs: React.FC = () => {
                                             <td className="py-3 px-4 text-white">{h.userId}</td>
                                             <td className="py-3 px-4 text-white">{h.percent}%</td>
                                             <td className="py-3 px-4 text-white">{h.amount}</td>
-                                            <td className="py-3 px-4 text-white font-bold text-right">{h.valueFormatted}</td>
+                                            <td className="py-3 px-4 text-white font-bold">{h.valueFormatted}</td>
                                         </tr>
                                     ))}
                                 </tbody>

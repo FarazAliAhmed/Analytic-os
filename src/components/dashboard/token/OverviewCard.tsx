@@ -212,20 +212,10 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           </div>
         </div>
         <div>
-          <div className="text-gray-400">Volume</div>
-          <div className="font-semibold text-white">
-            {tokenData ? `₦${(tokenData.volume / 100).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---'}
-          </div>
-        </div>
-        <div>
           <div className="text-gray-400">Yield Payout</div>
           <div className="font-semibold text-white">
             {tokenData ? `₦${((tokenData.price / 100) * (tokenData.annualYield / 100)).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---'}
           </div>
-        </div>
-        <div>
-          <div className="text-gray-400">Transactions</div>
-          <div className="font-semibold text-white">{tokenData?.transactionCount || 0}</div>
         </div>
         <div>
           <div className="text-gray-400">Date of Listing</div>

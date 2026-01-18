@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FaRegStar } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaRegStar, FaStar } from 'react-icons/fa';
 
 interface StartupCardProps {
     name: string;
@@ -10,10 +11,64 @@ interface StartupCardProps {
     price: number;
     change: number;
     logo: string;
+    tokenId: string;
 }
 
-export default function StartupCard({ name, symbol, price, change, logo }: StartupCardProps) {
+export default function StartupCard({ name, symbol, price, change, logo, tokenId }: StartupCardProps) {
     const router = useRouter();
+    const [isInWatchlist, setIsInWatchlist] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        checkWatchlistStatus();
+    }, [tokenId]);
+
+    const checkWatchlistStatus = async () => {
+        try {
+            const res = await fetch('/api/watchlist/ids');
+            const data = await res.json();
+            if (data.success) {
+                setIsInWatchlist(data.watchlistIds.includes(tokenId));
+            }
+        } catch (error) {
+            console.error('Failed to check watchlist status:', error);
+        }
+    };
+
+    const handleStarClick = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card click
+        
+        if (isLoading) return;
+        setIsLoading(true);
+
+        try {
+            if (isInWatchlist) {
+                // Remove from watchlist
+                const res = await fetch(`/api/watchlist/${tokenId}`, {
+                    method: 'DELETE',
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setIsInWatchlist(false);
+                }
+            } else {
+                // Add to watchlist
+                const res = await fetch('/api/watchlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tokenId }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setIsInWatchlist(true);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to toggle watchlist:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleClick = () => {
         router.push(`/dashboard/token?symbol=${symbol}`);
@@ -32,7 +87,18 @@ export default function StartupCard({ name, symbol, price, change, logo }: Start
                         <div className="text-xs text-gray-400 leading-tight">{name}</div>
                     </div>
                 </div>
-                <FaRegStar className="text-gray-400 text-lg" />
+                <button
+                    onClick={handleStarClick}
+                    disabled={isLoading}
+                    className="p-1 hover:scale-110 transition-transform disabled:opacity-50"
+                    aria-label={isInWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
+                >
+                    {isInWatchlist ? (
+                        <FaStar className="text-yellow-500 text-lg" />
+                    ) : (
+                        <FaRegStar className="text-gray-400 text-lg" />
+                    )}
+                </button>
             </div>
             <div className="flex items-end justify-between w-full mt-2">
                 <div className="font-bold text-xl text-white">₦{price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>

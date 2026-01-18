@@ -57,6 +57,7 @@ export default function TrendingStartups() {
       {tokens.map((token) => (
         <StartupCard
           key={token.id}
+          tokenId={token.symbol}
           name={token.name}
           symbol={token.symbol}
           price={token.price / 100} // Convert from kobo to naira

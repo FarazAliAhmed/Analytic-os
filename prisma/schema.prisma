@@ -276,6 +276,7 @@ model Token {
   name             String
   symbol           String   @unique
   price            Int      // in kobo (e.g., 150000 = ₦1,500)
+  priceChange24h   Decimal  @default(0) @db.Decimal(10, 2) // 24h price change percentage
   annualYield      Decimal  @db.Decimal(5, 2)
   industry         String
   payoutFrequency  String
