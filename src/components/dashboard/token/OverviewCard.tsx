@@ -32,8 +32,8 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
   useEffect(() => {
     const fetchTokenData = async () => {
       try {
-        setDataLoading(true); // Start loading
-        setError(''); // Clear any previous errors
+        setDataLoading(true);
+        setError('');
         
         const balanceRes = await fetch(`/api/token/balance?symbol=${tokenSymbol}`);
         const balanceData = await balanceRes.json();
@@ -48,19 +48,12 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           if (token) {
             setTokenPrice(token.price / 100);
             setTokenData(token);
-            // Only clear error if token is found
-          } else {
-            // Only set error after loading is complete
-            setError('Token not found');
           }
-        } else {
-          setError('Failed to load token data');
         }
       } catch (err) {
         console.error('Failed to fetch token data:', err);
-        setError('Failed to load token data');
       } finally {
-        setDataLoading(false); // Stop loading
+        setDataLoading(false);
       }
     };
     fetchTokenData();
