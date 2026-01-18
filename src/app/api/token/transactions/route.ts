@@ -30,6 +30,11 @@ export async function GET(request: Request) {
         userId: session.user.id,
         tokenId: symbol,
         status: 'completed'
+      },
+      include: {
+        user: {
+          select: { userId: true }
+        }
       }
     })
 
@@ -47,20 +52,36 @@ export async function GET(request: Request) {
             contains: symbol
           }
         }
+      },
+      include: {
+        wallet: {
+          select: {
+            user: {
+              select: { userId: true }
+            }
+          }
+        }
       }
     }) : []
 
     // Format buy transactions
-    const buyTxs = purchases.map((p) => ({
-      id: p.id,
-      date: p.createdAt.toISOString(),
-      type: 'buy' as const,
-      currency: 'NGN' as const,
-      amount: Number(p.tokensReceived),
-      pricePerToken: p.nairaAmountSpent / Number(p.tokensReceived),
-      totalAmount: p.nairaAmountSpent,
-      userId: p.userId,
-    }))
+    const buyTxs = purchases.map((p) => {
+      const customUserId = p.user?.userId || p.userId
+      const userIdDisplay = customUserId.length > 16 
+        ? `${customUserId.slice(0, 8)}...${customUserId.slice(-4)}`
+        : customUserId
+      
+      return {
+        id: p.id,
+        date: p.createdAt.toISOString(),
+        type: 'buy' as const,
+        currency: 'NGN' as const,
+        amount: Number(p.tokensReceived),
+        pricePerToken: p.nairaAmountSpent / Number(p.tokensReceived),
+        totalAmount: p.nairaAmountSpent,
+        userId: userIdDisplay,
+      }
+    })
 
     // Format sell transactions
     const sellTxs = sellTransactions.map((t) => {
@@ -68,6 +89,11 @@ export async function GET(request: Request) {
       const match = t.description.match(/Sold ([\d.]+) /)
       const tokensAmount = match ? parseFloat(match[1]) : 0
       const nairaAmount = t.amount / 100 // Convert from kobo to Naira
+      
+      const customUserId = t.wallet.user?.userId || session.user.id
+      const userIdDisplay = customUserId.length > 16 
+        ? `${customUserId.slice(0, 8)}...${customUserId.slice(-4)}`
+        : customUserId
       
       return {
         id: t.id,
@@ -77,7 +103,7 @@ export async function GET(request: Request) {
         amount: tokensAmount,
         pricePerToken: tokensAmount > 0 ? nairaAmount / tokensAmount : 0,
         totalAmount: nairaAmount,
-        userId: session.user.id,
+        userId: userIdDisplay,
       }
     })
 

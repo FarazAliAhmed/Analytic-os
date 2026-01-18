@@ -100,7 +100,7 @@ export default function StartupCard({ name, symbol, price, change, logo, tokenId
                 </button>
             </div>
             <div className="flex items-end justify-between w-full mt-2">
-                <div className="font-bold text-xl text-white">₦{price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                <div className="font-bold text-xl text-white">₦{Math.round(price).toLocaleString('en-NG')}</div>
                 <div className={`font-bold text-lg ml-4 ${change < 0 ? 'text-[#FF4D4F]' : 'text-green-400'}`}>{change > 0 ? '+' : ''}{change}%</div>
             </div>
         </div>
