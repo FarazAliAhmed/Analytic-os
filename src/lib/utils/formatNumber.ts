@@ -9,18 +9,20 @@ export function formatCurrency(value: number, currency: string = '₦'): string 
 }
 
 /**
- * Format large numbers with abbreviations (k, m) without decimals
+ * Format large numbers with abbreviations (k, m) with one decimal place
  * @param value - The value to format
  * @param currency - Currency symbol (default: ₦)
- * @returns Abbreviated string (e.g., ₦20m, ₦200k)
+ * @returns Abbreviated string (e.g., ₦20m, ₦1.5k)
  */
 export function formatLargeNumber(value: number, currency: string = '₦'): string {
   const rounded = Math.round(value);
   
   if (rounded >= 1000000) {
-    return `${currency}${Math.round(rounded / 1000000)}m`;
+    const millions = rounded / 1000000;
+    return `${currency}${millions.toFixed(1)}m`;
   } else if (rounded >= 1000) {
-    return `${currency}${Math.round(rounded / 1000)}k`;
+    const thousands = rounded / 1000;
+    return `${currency}${thousands.toFixed(1)}k`;
   }
   return `${currency}${rounded.toLocaleString('en-NG')}`;
 }
