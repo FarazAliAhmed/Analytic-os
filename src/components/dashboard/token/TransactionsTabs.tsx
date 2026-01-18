@@ -220,7 +220,7 @@ const TransactionsTabs: React.FC = () => {
                                             <td className={`py-3 px-4 font-medium capitalize ${tx.type === 'buy' ? 'text-green-500' : 'text-red-500'}`}>{tx.type}</td>
                                             <td className="py-3 px-4 text-white">{tx.ngn.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-white">{tx.amount}</td>
-                                            <td className="py-3 px-4 text-green-400">{tx.price.toLocaleString()}</td>
+                                            <td className={`py-3 px-4 font-medium ${tx.type === 'buy' ? 'text-green-400' : 'text-red-400'}`}>{tx.price.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-gray-400">{tx.maker}</td>
                                         </tr>
                                     ))}
@@ -253,7 +253,7 @@ const TransactionsTabs: React.FC = () => {
                                     {myTransactions.map((tx) => (
                                         <tr key={tx.id} className="border-t border-[#23262F]">
                                             <td className="py-3 px-4 text-white">{formatDate(tx.date)}</td>
-                                            <td className="py-3 px-4 font-medium text-green-500 capitalize">{tx.type}</td>
+                                            <td className={`py-3 px-4 font-medium capitalize ${tx.type === 'buy' ? 'text-green-500' : 'text-red-500'}`}>{tx.type}</td>
                                             <td className="py-3 px-4 text-white">{tx.totalAmount.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-white">{tx.amount}</td>
                                             <td className="py-3 px-4 text-white">{tx.pricePerToken.toLocaleString()}</td>
