@@ -12,28 +12,19 @@ interface StartupCardProps {
     change: number;
     logo: string;
     tokenId: string;
+    initialIsInWatchlist?: boolean;
+    onWatchlistToggle?: (tokenId: string, isInWatchlist: boolean) => void;
 }
 
-export default function StartupCard({ name, symbol, price, change, logo, tokenId }: StartupCardProps) {
+export default function StartupCard({ name, symbol, price, change, logo, tokenId, initialIsInWatchlist = false, onWatchlistToggle }: StartupCardProps) {
     const router = useRouter();
-    const [isInWatchlist, setIsInWatchlist] = useState(false);
+    const [isInWatchlist, setIsInWatchlist] = useState(initialIsInWatchlist);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Update local state when prop changes
     useEffect(() => {
-        checkWatchlistStatus();
-    }, [tokenId]);
-
-    const checkWatchlistStatus = async () => {
-        try {
-            const res = await fetch('/api/watchlist/ids');
-            const data = await res.json();
-            if (data.success) {
-                setIsInWatchlist(data.watchlistIds.includes(tokenId));
-            }
-        } catch (error) {
-            console.error('Failed to check watchlist status:', error);
-        }
-    };
+        setIsInWatchlist(initialIsInWatchlist);
+    }, [initialIsInWatchlist]);
 
     const handleStarClick = async (e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent card click
@@ -50,6 +41,7 @@ export default function StartupCard({ name, symbol, price, change, logo, tokenId
                 const data = await res.json();
                 if (data.success) {
                     setIsInWatchlist(false);
+                    onWatchlistToggle?.(tokenId, false);
                 }
             } else {
                 // Add to watchlist
@@ -61,6 +53,7 @@ export default function StartupCard({ name, symbol, price, change, logo, tokenId
                 const data = await res.json();
                 if (data.success) {
                     setIsInWatchlist(true);
+                    onWatchlistToggle?.(tokenId, true);
                 }
             }
         } catch (error) {

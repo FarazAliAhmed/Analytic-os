@@ -18,6 +18,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
   const [tokenPrice, setTokenPrice] = useState(1500);
   const [tokenData, setTokenData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true); // Add loading state for initial data fetch
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [currency, setCurrency] = useState<Currency>('NGN');
@@ -31,6 +32,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
   useEffect(() => {
     const fetchTokenData = async () => {
       try {
+        setDataLoading(true); // Start loading
         setError(''); // Clear any previous errors
         
         const balanceRes = await fetch(`/api/token/balance?symbol=${tokenSymbol}`);
@@ -54,6 +56,8 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
       } catch (err) {
         console.error('Failed to fetch token data:', err);
         setError('Failed to load token data');
+      } finally {
+        setDataLoading(false); // Stop loading
       }
     };
     fetchTokenData();
@@ -190,16 +194,30 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
         <FiInfo className="text-gray-400" size={14} />
       </div>
 
-      {/* Token Holdings */}
-      <div className="mb-3 p-2 bg-[#181A20] rounded-lg">
-        <div className="text-gray-400 text-xs">Your Holdings</div>
-        <div className="text-white font-bold text-lg">{tokenBalance} {tokenSymbol}</div>
-        {tokenBalance > 0 && (
-          <div className="text-gray-400 text-xs mt-0.5">
-            Value: {formatCurrency(tokenBalance * tokenPrice)}
+      {/* Loading State */}
+      {dataLoading ? (
+        <div className="animate-pulse space-y-3">
+          <div className="h-16 bg-gray-800 rounded-lg"></div>
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-10 bg-gray-800 rounded"></div>
+            ))}
           </div>
-        )}
-      </div>
+          <div className="h-10 bg-gray-800 rounded"></div>
+          <div className="h-10 bg-gray-800 rounded"></div>
+        </div>
+      ) : (
+        <>
+          {/* Token Holdings */}
+          <div className="mb-3 p-2 bg-[#181A20] rounded-lg">
+            <div className="text-gray-400 text-xs">Your Holdings</div>
+            <div className="text-white font-bold text-lg">{tokenBalance} {tokenSymbol}</div>
+            {tokenBalance > 0 && (
+              <div className="text-gray-400 text-xs mt-0.5">
+                Value: {formatCurrency(tokenBalance * tokenPrice)}
+              </div>
+            )}
+          </div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3 text-xs">
         <div>
@@ -214,11 +232,16 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
         </div>
         <div>
           <div className="text-gray-400">Volume</div>
-          <div 
-            className="font-semibold text-white cursor-help" 
-            title={tokenData ? getFullValue(tokenData.volume / 100) : '---'}
-          >
-            {tokenData ? formatLargeNumber(tokenData.volume / 100) : '---'}
+          <div className="relative group">
+            <div className="font-semibold text-white cursor-help">
+              {tokenData ? formatLargeNumber(tokenData.volume / 100) : '---'}
+            </div>
+            {tokenData && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-gray-700">
+                {getFullValue(tokenData.volume / 100)}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
+              </div>
+            )}
           </div>
         </div>
         <div>
@@ -450,6 +473,8 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           tradeType === 'buy' ? 'Buy' : 'Sell'
         )}
       </button>
+        </>
+      )}
     </div>
   );
 };

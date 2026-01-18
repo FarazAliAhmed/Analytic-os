@@ -10,7 +10,12 @@ interface Token {
   volume: number;
 }
 
-export default function TrendingStartups() {
+interface TrendingStartupsProps {
+  watchlistIds: string[];
+  onWatchlistToggle: (tokenId: string, isInWatchlist: boolean) => void;
+}
+
+export default function TrendingStartups({ watchlistIds, onWatchlistToggle }: TrendingStartupsProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,6 +68,8 @@ export default function TrendingStartups() {
           price={token.price / 100} // Convert from kobo to naira
           change={0} // Would need historical data for real change
           logo={token.logoUrl || '/icons/company.svg'}
+          initialIsInWatchlist={watchlistIds.includes(token.symbol)}
+          onWatchlistToggle={onWatchlistToggle}
         />
       ))}
     </div>

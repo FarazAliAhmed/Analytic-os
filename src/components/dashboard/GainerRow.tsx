@@ -17,6 +17,8 @@ interface GainerRowProps {
     marketCap: string;
     chart: string;
     tokenId?: string;
+    initialIsInWatchlist?: boolean;
+    onWatchlistToggle?: (tokenId: string, isInWatchlist: boolean) => void;
 }
 
 export default function GainerRow({ 
@@ -30,31 +32,17 @@ export default function GainerRow({
     yieldPayout,
     marketCap, 
     chart,
-    tokenId 
+    tokenId,
+    initialIsInWatchlist = false,
+    onWatchlistToggle
 }: GainerRowProps) {
     const router = useRouter();
-    const [isInWatchlist, setIsInWatchlist] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [isInWatchlist, setIsInWatchlist] = useState(initialIsInWatchlist);
 
+    // Update local state when prop changes
     useEffect(() => {
-        const checkWatchlist = async () => {
-            try {
-                const res = await fetch('/api/watchlist/ids');
-                const data = await res.json();
-                if (data.success && data.tokenIds) {
-                    setIsInWatchlist(data.tokenIds.includes(tokenId || name));
-                }
-            } catch (error) {
-                console.error('Failed to check watchlist:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (tokenId || name) {
-            checkWatchlist();
-        }
-    }, [tokenId, name]);
+        setIsInWatchlist(initialIsInWatchlist);
+    }, [initialIsInWatchlist]);
 
     const handleClick = (e: React.MouseEvent) => {
         // Don't navigate if clicking on the star button
@@ -71,20 +59,20 @@ export default function GainerRow({
         e.stopPropagation(); // Prevent row click
     }
 
+    const handleWatchlistToggle = (newState: boolean) => {
+        setIsInWatchlist(newState);
+        onWatchlistToggle?.(tokenId || name, newState);
+    };
+
     return (
         <tr className="border-t text-white cursor-pointer border-gray-800 hover:bg-gray-800 transition" onClick={handleClick}>
             <td className="py-3 px-4" onClick={handleWatchlistClick}>
-                {!loading && (
-                    <WatchlistButton
-                        tokenId={tokenId || name}
-                        initialIsInWatchlist={isInWatchlist}
-                        size="md"
-                        onToggle={(newState) => setIsInWatchlist(newState)}
-                    />
-                )}
-                {loading && (
-                    <div className="w-5 h-5 border-2 border-gray-600 border-t-yellow-500 rounded-full animate-spin"></div>
-                )}
+                <WatchlistButton
+                    tokenId={tokenId || name}
+                    initialIsInWatchlist={isInWatchlist}
+                    size="md"
+                    onToggle={handleWatchlistToggle}
+                />
             </td>
             <td className="py-3 px-4 flex items-center gap-3">
                 <Image src={logo} alt={name} width={28} height={28} className="rounded-full" />

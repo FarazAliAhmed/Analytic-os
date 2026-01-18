@@ -16,11 +16,13 @@ interface Token {
 interface TopTableProps {
   activeTab?: string;
   timePeriod?: '1d' | '7d' | '30d' | '1yr';
+  watchlistIds: string[];
+  onWatchlistToggle: (tokenId: string, isInWatchlist: boolean) => void;
 }
 
 type TimePeriod = '1d' | '7d' | '30d' | '1yr';
 
-export default function TopTable({ activeTab = 'all', timePeriod = '30d' }: TopTableProps) {
+export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchlistIds, onWatchlistToggle }: TopTableProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -162,6 +164,8 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d' }: TopT
                 marketCap={`₦${token.volume.toLocaleString()}`}
                 chart="/icons/chart.svg"
                 tokenId={token.symbol}
+                initialIsInWatchlist={watchlistIds.includes(token.symbol)}
+                onWatchlistToggle={onWatchlistToggle}
               />
             );
           })}

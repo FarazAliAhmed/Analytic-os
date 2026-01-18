@@ -71,9 +71,9 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
             // Calculate current market value
             const currentValue = holding.quantity * (holding.token.price / 100)
             
-            // Calculate new accumulated yield since last update
+            // Calculate new accumulated yield since last update (based on current portfolio value)
             const newAccumulatedYield = calculateAccumulatedYield(
-              holding.totalInvested,
+              currentValue,  // Use current portfolio value, not investment amount
               Number(holding.token.annualYield),
               new Date(holding.lastYieldUpdate)
             )

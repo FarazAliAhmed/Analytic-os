@@ -71,18 +71,18 @@ export async function GET(): Promise<NextResponse<PortfolioSummaryResponse>> {
       const token = tokenMap.get(holding.tokenId)
       if (!token) continue
 
-      // Calculate new accumulated yield since last update
+      // Calculate current portfolio value for this holding
+      const currentValue = Number(holding.quantity) * (token.price / 100)
+
+      // Calculate new accumulated yield since last update (based on current portfolio value)
       const newAccumulatedYield = calculateAccumulatedYield(
-        Number(holding.totalInvested),
+        currentValue,  // Use current portfolio value, not investment amount
         Number(token.annualYield),
         holding.lastYieldUpdate
       )
       
       // Total accumulated yield for this holding
       const holdingAccumulatedYield = Number(holding.accumulatedYield) + newAccumulatedYield
-      
-      // Calculate current market value
-      const currentValue = Number(holding.quantity) * (token.price / 100)
       
       // Unrealized gain/loss
       const unrealizedGainLoss = currentValue - Number(holding.totalInvested)

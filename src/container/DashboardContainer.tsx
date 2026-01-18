@@ -16,6 +16,7 @@ export default function DashboardContainer() {
     const [activeTab, setActiveTab] = useState('all');
     const [timePeriod, setTimePeriod] = useState<'1d' | '7d' | '30d' | '1yr'>('30d');
     const [tokenCount, setTokenCount] = useState(0);
+    const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
     const searchDropdownRef = useRef<HTMLDivElement>(null);
 
     // Fetch token count
@@ -33,6 +34,31 @@ export default function DashboardContainer() {
         };
         fetchTokenCount();
     }, []);
+
+    // Fetch watchlist IDs
+    useEffect(() => {
+        const fetchWatchlist = async () => {
+            try {
+                const res = await fetch('/api/watchlist/ids');
+                const data = await res.json();
+                if (data.success && data.tokenIds) {
+                    setWatchlistIds(data.tokenIds);
+                }
+            } catch (error) {
+                console.error('Failed to fetch watchlist:', error);
+            }
+        };
+        fetchWatchlist();
+    }, []);
+
+    // Handle watchlist toggle from any component
+    const handleWatchlistToggle = (tokenId: string, isInWatchlist: boolean) => {
+        if (isInWatchlist) {
+            setWatchlistIds(prev => [...prev, tokenId]);
+        } else {
+            setWatchlistIds(prev => prev.filter(id => id !== tokenId));
+        }
+    };
 
     // Close on click outside and escape
     useEffect(() => {
@@ -96,14 +122,22 @@ export default function DashboardContainer() {
                         </div>
                     </div>
                 </div>
-                <TrendingStartups />
+                <TrendingStartups 
+                    watchlistIds={watchlistIds}
+                    onWatchlistToggle={handleWatchlistToggle}
+                />
             </section>
             <section className="mt-8">
                 <Tabs 
                     onTabChange={setActiveTab} 
                     onTimePeriodChange={setTimePeriod}
                 />
-                <TopTable activeTab={activeTab} timePeriod={timePeriod} />
+                <TopTable 
+                    activeTab={activeTab} 
+                    timePeriod={timePeriod}
+                    watchlistIds={watchlistIds}
+                    onWatchlistToggle={handleWatchlistToggle}
+                />
             </section>
             <FiltersDropdown
                 id="filters-dropdown"

@@ -1,12 +1,13 @@
 /**
  * Calculate daily yield for an investment based on APY
- * Formula: Daily_Yield = (Investment_Amount × APY%) / 365
+ * Formula: Daily_Yield = (Portfolio_Value × APY%) / 365
+ * Note: Uses current portfolio value, not original investment amount
  */
 export function calculateDailyYield(
-  investmentAmount: number,  // in Naira
+  portfolioValue: number,  // Current market value in Naira
   annualYieldPercent: number // e.g., 18 for 18%
 ): number {
-  return (investmentAmount * (annualYieldPercent / 100)) / 365
+  return (portfolioValue * (annualYieldPercent / 100)) / 365
 }
 
 /**
@@ -15,7 +16,7 @@ export function calculateDailyYield(
  * Note: Supports partial days (e.g., 0.5 days = 12 hours)
  */
 export function calculateAccumulatedYield(
-  investmentAmount: number,  // in Naira
+  portfolioValue: number,  // Current market value in Naira
   annualYieldPercent: number, // e.g., 18 for 18%
   lastYieldUpdate: Date
 ): number {
@@ -24,7 +25,7 @@ export function calculateAccumulatedYield(
   // Use actual days elapsed (including partial days)
   const daysSinceLastUpdate = (now.getTime() - lastYieldUpdate.getTime()) / msPerDay
   
-  const dailyYield = calculateDailyYield(investmentAmount, annualYieldPercent)
+  const dailyYield = calculateDailyYield(portfolioValue, annualYieldPercent)
   return dailyYield * daysSinceLastUpdate
 }
 
