@@ -13,12 +13,17 @@ interface PortfolioData {
 }
 
 function formatNaira(amount: number): string {
+    const rounded = Math.round(amount)
+    // If amount is very small but not zero, show with 2 decimals
+    if (amount > 0 && rounded === 0) {
+        return `₦${amount.toFixed(2)}`
+    }
     return new Intl.NumberFormat('en-NG', {
         style: 'currency',
         currency: 'NGN',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(amount).replace('NGN', '₦')
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(rounded).replace('NGN', '₦')
 }
 
 export default function PortfolioSummary() {
@@ -106,7 +111,7 @@ export default function PortfolioSummary() {
                         {formatNaira(totalInvested)}
                     </div>
                     <div className="text-green-400 text-sm font-medium">
-                        {totalYield > 0 ? `+${formatNaira(totalYield)} yield earned` : 'No yield earned yet'}
+                        {totalYield > 0 ? `+${formatNaira(totalYield)} yield earned` : totalYield < 0 ? `${formatNaira(totalYield)} loss` : 'No yield earned yet'}
                     </div>
                 </div>
 

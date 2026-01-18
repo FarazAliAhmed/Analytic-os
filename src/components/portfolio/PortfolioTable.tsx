@@ -29,7 +29,12 @@ interface PortfolioTableProps {
 }
 
 function formatNaira(amount: number): string {
-  return `₦${Math.round(amount).toLocaleString('en-NG')}`
+  const rounded = Math.round(amount)
+  // If amount is very small but not zero, show at least ₦1
+  if (amount > 0 && rounded === 0) {
+    return `₦${amount.toFixed(2)}`
+  }
+  return `₦${rounded.toLocaleString('en-NG')}`
 }
 
 function formatUnits(units: number): string {
@@ -148,7 +153,7 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                         {totalYield >= 0 ? '+' : ''}{formatNaira(totalYield)}
                       </div>
                       <div className={`text-xs ${yieldPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {yieldPercent >= 0 ? '+' : ''}{Math.round(yieldPercent)}%
+                        {yieldPercent >= 0 ? '+' : ''}{yieldPercent < 1 && yieldPercent > 0 ? yieldPercent.toFixed(2) : Math.round(yieldPercent)}%
                       </div>
                     </>
                   )}

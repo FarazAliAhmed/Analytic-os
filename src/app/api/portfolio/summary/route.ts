@@ -31,59 +31,64 @@ export async function GET(): Promise<NextResponse<PortfolioSummaryResponse>> {
 
     const userId = session.user.id
 
-    // Query 1: Get total invested (sum of nairaAmountSpent from completed purchases)
-    const investmentResult = await prisma.tokenPurchase.aggregate({
+    // Get all holdings with token info for yield calculation
+    const holdings = await prisma.tokenHolding.findMany({
       where: {
         userId,
-        status: 'completed'
-      },
-      _sum: {
-        nairaAmountSpent: true
-      }
-    })
-    const totalInvested = investmentResult._sum.nairaAmountSpent || 0
-
-    // Query 2: Get all purchases with token info for yield calculation
-    const purchases = await prisma.tokenPurchase.findMany({
-      where: {
-        userId,
-        status: 'completed'
+        quantity: { gt: 0 }
       },
       select: {
-        nairaAmountSpent: true,
+        totalInvested: true,
+        accumulatedYield: true,
+        lastYieldUpdate: true,
         tokenId: true,
-        createdAt: true
+        quantity: true
       }
     })
 
-    // Get token APY data
-    const tokenIds = [...new Set(purchases.map(p => p.tokenId))]
+    // Calculate total invested from holdings
+    const totalInvested = holdings.reduce((sum, h) => sum + Number(h.totalInvested), 0)
+
+    // Get token info for APY
+    const tokenIds = [...new Set(holdings.map(h => h.tokenId))]
     const tokens = await prisma.token.findMany({
       where: {
         symbol: { in: tokenIds }
       },
       select: {
         symbol: true,
-        annualYield: true
+        annualYield: true,
+        price: true
       }
     })
 
-    // Create a map of tokenId -> annualYield
-    const tokenYieldMap = new Map<string, number>()
-    tokens.forEach(t => {
-      tokenYieldMap.set(t.symbol, Number(t.annualYield))
-    })
+    // Create a map of tokenId -> token data
+    const tokenMap = new Map(tokens.map(t => [t.symbol, t]))
 
-    // Calculate total yield across all purchases
+    // Calculate total yield across all holdings
     let totalYield = 0
-    for (const purchase of purchases) {
-      const annualYield = tokenYieldMap.get(purchase.tokenId) ?? 0
-      const yieldAmount = calculateAccumulatedYield(
-        purchase.nairaAmountSpent,
-        annualYield,
-        purchase.createdAt
+    for (const holding of holdings) {
+      const token = tokenMap.get(holding.tokenId)
+      if (!token) continue
+
+      // Calculate new accumulated yield since last update
+      const newAccumulatedYield = calculateAccumulatedYield(
+        Number(holding.totalInvested),
+        Number(token.annualYield),
+        holding.lastYieldUpdate
       )
-      totalYield += yieldAmount
+      
+      // Total accumulated yield for this holding
+      const holdingAccumulatedYield = Number(holding.accumulatedYield) + newAccumulatedYield
+      
+      // Calculate current market value
+      const currentValue = Number(holding.quantity) * (token.price / 100)
+      
+      // Unrealized gain/loss
+      const unrealizedGainLoss = currentValue - Number(holding.totalInvested)
+      
+      // Total yield = unrealized gain/loss + accumulated yield
+      totalYield += unrealizedGainLoss + holdingAccumulatedYield
     }
 
     // Query 3: Count transactions in last 30 days

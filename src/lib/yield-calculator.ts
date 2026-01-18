@@ -12,6 +12,7 @@ export function calculateDailyYield(
 /**
  * Calculate accumulated yield since last update
  * Formula: Accumulated_Yield = Daily_Yield × days_elapsed
+ * Note: Supports partial days (e.g., 0.5 days = 12 hours)
  */
 export function calculateAccumulatedYield(
   investmentAmount: number,  // in Naira
@@ -20,9 +21,8 @@ export function calculateAccumulatedYield(
 ): number {
   const now = new Date()
   const msPerDay = 24 * 60 * 60 * 1000
-  const daysSinceLastUpdate = Math.floor(
-    (now.getTime() - lastYieldUpdate.getTime()) / msPerDay
-  )
+  // Use actual days elapsed (including partial days)
+  const daysSinceLastUpdate = (now.getTime() - lastYieldUpdate.getTime()) / msPerDay
   
   const dailyYield = calculateDailyYield(investmentAmount, annualYieldPercent)
   return dailyYield * daysSinceLastUpdate
