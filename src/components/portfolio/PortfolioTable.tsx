@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import WatchlistButton from '@/components/watchlist/WatchlistButton'
 import { calculateAccumulatedYield, calculateTotalYield } from '@/lib/yield-calculator'
 
@@ -43,11 +46,22 @@ function formatUnits(units: number): string {
 }
 
 export default function PortfolioTable({ holdings, watchlistIds, onWatchlistToggle }: PortfolioTableProps) {
+  const router = useRouter()
+  
   // Calculate total portfolio value for allocation percentages
   const totalPortfolioValue = holdings.reduce((sum, h) => {
     if (h.quantity === 0) return sum
     return sum + h.totalInvested
   }, 0)
+
+  const handleRowClick = (tokenSymbol: string, e: React.MouseEvent) => {
+    // Don't navigate if clicking on the watchlist button
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('[role="button"]')) {
+      return
+    }
+    router.push(`/dashboard/token?symbol=${tokenSymbol}`)
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -93,7 +107,11 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
               : 0
 
             return (
-              <tr key={holding.id} className="border-t border-gray-800 hover:bg-gray-900 transition">
+              <tr 
+                key={holding.id} 
+                onClick={(e) => handleRowClick(holding.token.symbol, e)}
+                className="border-t border-gray-800 hover:bg-gray-900 transition cursor-pointer"
+              >
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
                     <div className="relative">
