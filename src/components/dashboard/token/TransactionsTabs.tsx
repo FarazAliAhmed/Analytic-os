@@ -64,6 +64,20 @@ const TransactionsTabs: React.FC = () => {
     const [tokenData, setTokenData] = useState<TokenData | null>(null);
     const [loading, setLoading] = useState(false);
 
+    // Format large numbers with K, M, B suffixes
+    const formatCompactNumber = (num: number): string => {
+        if (num >= 1_000_000_000) {
+            return (num / 1_000_000_000).toFixed(1) + 'B'
+        }
+        if (num >= 1_000_000) {
+            return (num / 1_000_000).toFixed(1) + 'M'
+        }
+        if (num >= 1_000) {
+            return (num / 1_000).toFixed(1) + 'K'
+        }
+        return num.toLocaleString()
+    }
+
     useEffect(() => {
         if (activeTab === 0) {
             fetchAllTransactions();
@@ -206,7 +220,7 @@ const TransactionsTabs: React.FC = () => {
                                             <td className={`py-3 px-4 font-medium capitalize ${tx.type === 'buy' ? 'text-green-500' : 'text-red-500'}`}>{tx.type}</td>
                                             <td className="py-3 px-4 text-white">{tx.ngn.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-white">{tx.amount}</td>
-                                            <td className="py-3 px-4 text-green-400">₦{tx.price.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-green-400">{tx.price.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-gray-400">{tx.maker}</td>
                                         </tr>
                                     ))}
@@ -240,9 +254,9 @@ const TransactionsTabs: React.FC = () => {
                                         <tr key={tx.id} className="border-t border-[#23262F]">
                                             <td className="py-3 px-4 text-white">{formatDate(tx.date)}</td>
                                             <td className="py-3 px-4 font-medium text-green-500 capitalize">{tx.type}</td>
-                                            <td className="py-3 px-4 text-white">₦{tx.totalAmount.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-white">{tx.totalAmount.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-white">{tx.amount}</td>
-                                            <td className="py-3 px-4 text-white">₦{tx.pricePerToken.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-white">{tx.pricePerToken.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-gray-400 text-xs">{tx.userId}</td>
                                         </tr>
                                     ))}
@@ -275,7 +289,7 @@ const TransactionsTabs: React.FC = () => {
                                             <td className="py-3 px-4 text-white">{h.userId}</td>
                                             <td className="py-3 px-4 text-white">{h.percent}%</td>
                                             <td className="py-3 px-4 text-white">{h.amount}</td>
-                                            <td className="py-3 px-4 text-white font-bold">{h.valueFormatted}</td>
+                                            <td className="py-3 px-4 text-white font-bold">{formatCompactNumber(h.value)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
