@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Calculate tokens received (floor division)
-    const tokensReceived = Math.floor(data.nairaAmount / TOKEN_PRICE_NAIRA)
+    // Calculate tokens received (exact division for fractional tokens)
+    const tokensReceived = data.nairaAmount / TOKEN_PRICE_NAIRA
 
     // Generate unique reference
     const reference = `TKN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
@@ -107,10 +107,11 @@ export async function POST(request: NextRequest) {
       let holding
       if (existingHolding) {
         // Calculate new average price (in kobo)
-        const oldTotalCost = existingHolding.quantity * Number(existingHolding.averagePrice)
+        const oldTotalCost = Number(existingHolding.quantity) * Number(existingHolding.averagePrice)
         const newPurchaseCost = tokensReceived * TOKEN_PRICE_KOBO
-        const newTotalQuantity = existingHolding.quantity + tokensReceived
+        const newTotalQuantity = Number(existingHolding.quantity) + tokensReceived
         const newAveragePrice = (oldTotalCost + newPurchaseCost) / newTotalQuantity
+        const newTotalInvested = Number(existingHolding.totalInvested) + data.nairaAmount
 
         holding = await tx.tokenHolding.update({
           where: {
@@ -122,17 +123,22 @@ export async function POST(request: NextRequest) {
           data: {
             quantity: { increment: tokensReceived },
             averagePrice: newAveragePrice,
+            totalInvested: newTotalInvested,
+            lastYieldUpdate: new Date(),
             updatedAt: new Date()
           }
         })
       } else {
-        // First purchase - set initial average price (in kobo)
+        // First purchase - set initial values
         holding = await tx.tokenHolding.create({
           data: {
             userId: session.user.id,
             tokenId: token.symbol,
             quantity: tokensReceived,
-            averagePrice: TOKEN_PRICE_KOBO
+            averagePrice: TOKEN_PRICE_KOBO,
+            totalInvested: data.nairaAmount,
+            accumulatedYield: 0,
+            lastYieldUpdate: new Date()
           }
         })
       }

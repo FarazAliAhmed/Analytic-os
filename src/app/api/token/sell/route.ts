@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 const sellTokenSchema = z.object({
   tokenSymbol: z.string().min(1, 'Token symbol is required'),
-  tokensToSell: z.number().min(1, 'Amount must be positive'),
+  tokensToSell: z.number().positive('Amount must be positive'),
 })
 
 interface SellTokenResponse {
@@ -61,10 +61,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (!holding || holding.quantity < data.tokensToSell) {
+    if (!holding || Number(holding.quantity) < data.tokensToSell) {
       return NextResponse.json({
         success: false,
-        error: `Insufficient tokens. You have ${holding?.quantity || 0} ${data.tokenSymbol}`
+        error: `Insufficient tokens. You have ${Number(holding?.quantity || 0).toFixed(6)} ${data.tokenSymbol}`
       }, { status: 400 })
     }
 
@@ -92,7 +92,11 @@ export async function POST(request: NextRequest) {
         data: { balance: { increment: nairaInKobo } }
       })
 
-      // 2. Update token holding
+      // 2. Calculate proportional totalInvested reduction
+      const sellRatio = data.tokensToSell / Number(holding.quantity)
+      const investedReduction = Number(holding.totalInvested) * sellRatio
+
+      // 3. Update token holding
       const updatedHolding = await tx.tokenHolding.update({
         where: {
           userId_tokenId: {
@@ -102,11 +106,12 @@ export async function POST(request: NextRequest) {
         },
         data: {
           quantity: { decrement: data.tokensToSell },
+          totalInvested: { decrement: investedReduction },
           updatedAt: new Date()
         }
       })
 
-      // 3. Record sale as a transaction
+      // 4. Record sale as a transaction
       const saleTransaction = await tx.transaction.create({
         data: {
           walletId: wallet.id,
@@ -118,7 +123,7 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // 4. Update token statistics
+      // 5. Update token statistics
       await tx.token.update({
         where: { id: token.id },
         data: {
@@ -141,7 +146,7 @@ export async function POST(request: NextRequest) {
         tokensSold: data.tokensToSell,
         nairaReceived,
         pricePerToken: TOKEN_PRICE_NAIRA,
-        newTokenBalance: result.holding.quantity,
+        newTokenBalance: Number(result.holding.quantity),
         newWalletBalance: result.wallet.balance,
         reference
       }

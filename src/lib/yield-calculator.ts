@@ -1,19 +1,42 @@
 /**
- * Calculate yield for an investment based on APY and weeks elapsed
- * Formula: Weekly_Yield = (Investment_Amount × APY%) / 52
- * Total_Yield = Weekly_Yield × weeksElapsed
+ * Calculate daily yield for an investment based on APY
+ * Formula: Daily_Yield = (Investment_Amount × APY%) / 365
  */
-export function calculateYield(
+export function calculateDailyYield(
   investmentAmount: number,  // in Naira
-  annualYieldPercent: number, // e.g., 20 for 20%
-  purchaseDate: Date
+  annualYieldPercent: number // e.g., 18 for 18%
+): number {
+  return (investmentAmount * (annualYieldPercent / 100)) / 365
+}
+
+/**
+ * Calculate accumulated yield since last update
+ * Formula: Accumulated_Yield = Daily_Yield × days_elapsed
+ */
+export function calculateAccumulatedYield(
+  investmentAmount: number,  // in Naira
+  annualYieldPercent: number, // e.g., 18 for 18%
+  lastYieldUpdate: Date
 ): number {
   const now = new Date()
-  const msPerWeek = 7 * 24 * 60 * 60 * 1000
-  const weeksSincePurchase = Math.floor(
-    (now.getTime() - purchaseDate.getTime()) / msPerWeek
+  const msPerDay = 24 * 60 * 60 * 1000
+  const daysSinceLastUpdate = Math.floor(
+    (now.getTime() - lastYieldUpdate.getTime()) / msPerDay
   )
   
-  const weeklyYield = (investmentAmount * (annualYieldPercent / 100)) / 52
-  return weeklyYield * weeksSincePurchase
+  const dailyYield = calculateDailyYield(investmentAmount, annualYieldPercent)
+  return dailyYield * daysSinceLastUpdate
+}
+
+/**
+ * Calculate total yield including accumulated yield
+ * Formula: Total_Yield = (Current_Value - Total_Invested) + Accumulated_Yield
+ */
+export function calculateTotalYield(
+  currentValue: number,      // Current market value
+  totalInvested: number,      // Total amount invested
+  accumulatedYield: number    // Accumulated yield from APY
+): number {
+  const unrealizedGainLoss = currentValue - totalInvested
+  return unrealizedGainLoss + accumulatedYield
 }

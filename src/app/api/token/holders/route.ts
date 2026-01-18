@@ -50,13 +50,19 @@ export async function GET(request: NextRequest) {
           select: { userId: true }
         })
 
+        const userId = user?.userId || 'UNKNOWN'
+        // Format: Show first 8 chars + ... + last 4 chars (e.g., EWonZrNY...keb2)
+        const userIdDisplay = userId.length > 16 
+          ? `${userId.slice(0, 8)}...${userId.slice(-4)}`
+          : userId
+
         const quantity = holding._sum?.quantity || 0
         const percent = totalSupply > 0 ? (quantity / totalSupply) * 100 : 0
         const value = (quantity * token.price) / 100 // Convert from kobo to Naira
 
         return {
           rank: index + 1,
-          userId: user?.userId || 'UNKNOWN',
+          userId: userIdDisplay,
           percent: parseFloat(percent.toFixed(2)),
           amount: quantity,
           value: value,

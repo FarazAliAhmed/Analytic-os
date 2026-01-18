@@ -1,11 +1,15 @@
 import Image from 'next/image'
 import WatchlistButton from '@/components/watchlist/WatchlistButton'
+import { calculateAccumulatedYield, calculateTotalYield } from '@/lib/yield-calculator'
 
 interface HoldingsToken {
   id: string
   tokenId: string
   quantity: number
   averagePrice: number
+  totalInvested: number
+  accumulatedYield: number
+  lastYieldUpdate: Date
   token: {
     id: string
     name: string
@@ -25,14 +29,21 @@ interface PortfolioTableProps {
 }
 
 function formatNaira(amount: number): string {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    minimumFractionDigits: 2,
-  }).format(amount).replace('NGN', '₦')
+  return `₦${Math.round(amount).toLocaleString('en-NG')}`
+}
+
+function formatUnits(units: number): string {
+  // Show up to 6 decimal places, remove trailing zeros
+  return units.toFixed(6).replace(/\.?0+$/, '')
 }
 
 export default function PortfolioTable({ holdings, watchlistIds, onWatchlistToggle }: PortfolioTableProps) {
+  // Calculate total portfolio value for allocation percentages
+  const totalPortfolioValue = holdings.reduce((sum, h) => {
+    if (h.quantity === 0) return sum
+    return sum + h.totalInvested
+  }, 0)
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left">
@@ -50,11 +61,31 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
         <tbody>
           {holdings.map((holding) => {
             const isWatchlistOnly = holding.quantity === 0
-            const currentValue = holding.quantity * (holding.token.price / 100)
-            const costBasis = holding.quantity * (holding.averagePrice / 100)
-            const totalYield = currentValue - costBasis
-            const yieldPercent = costBasis > 0 ? (totalYield / costBasis) * 100 : 0
             const isInWatchlist = watchlistIds.includes(holding.tokenId)
+
+            // Calculate current market value
+            const currentValue = holding.quantity * (holding.token.price / 100)
+            
+            // Calculate new accumulated yield since last update
+            const newAccumulatedYield = calculateAccumulatedYield(
+              holding.totalInvested,
+              Number(holding.token.annualYield),
+              new Date(holding.lastYieldUpdate)
+            )
+            
+            // Total accumulated yield
+            const totalAccumulatedYield = holding.accumulatedYield + newAccumulatedYield
+            
+            // Calculate total yield (unrealized gain/loss + accumulated yield)
+            const totalYield = calculateTotalYield(
+              currentValue,
+              holding.totalInvested,
+              totalAccumulatedYield
+            )
+            
+            const yieldPercent = holding.totalInvested > 0 
+              ? (totalYield / holding.totalInvested) * 100 
+              : 0
 
             return (
               <tr key={holding.id} className="border-t border-gray-800 hover:bg-gray-900 transition">
@@ -86,15 +117,15 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                 </td>
                 <td className="py-3 px-4">
                   <div className="font-semibold text-white">{formatNaira(holding.token.price / 100)}</div>
-                  <div className="text-xs text-green-400">+{holding.token.annualYield}% APY</div>
+                  <div className="text-xs text-green-400">+{Math.round(Number(holding.token.annualYield))}% APY</div>
                 </td>
                 <td className="py-3 px-4">
                   {isWatchlistOnly ? (
                     <div className="text-gray-500 text-sm">Not purchased</div>
                   ) : (
                     <>
-                      <div className="font-semibold text-white">{formatNaira(currentValue)}</div>
-                      <div className="text-xs text-gray-400">{holding.quantity} units</div>
+                      <div className="font-semibold text-white">{formatNaira(holding.totalInvested)}</div>
+                      <div className="text-xs text-gray-400">{formatUnits(holding.quantity)} units</div>
                     </>
                   )}
                 </td>
@@ -117,7 +148,7 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                         {totalYield >= 0 ? '+' : ''}{formatNaira(totalYield)}
                       </div>
                       <div className={`text-xs ${yieldPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {yieldPercent >= 0 ? '+' : ''}{yieldPercent.toFixed(2)}%
+                        {yieldPercent >= 0 ? '+' : ''}{Math.round(yieldPercent)}%
                       </div>
                     </>
                   )}
@@ -127,11 +158,13 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                     <div className="w-full h-2 bg-gray-800 rounded">
                       <div
                         className="h-2 bg-white rounded"
-                        style={{ width: `${Math.min(100, currentValue / 100)}%` }}
+                        style={{ 
+                          width: `${totalPortfolioValue > 0 ? Math.min(100, (holding.totalInvested / totalPortfolioValue) * 100) : 0}%` 
+                        }}
                       />
                     </div>
                     <span className="text-xs text-gray-400">
-                      {((currentValue / (holdings.reduce((sum, h) => sum + (h.quantity * (h.token.price / 100)), 0))) * 100).toFixed(1)}%
+                      {totalPortfolioValue > 0 ? ((holding.totalInvested / totalPortfolioValue) * 100).toFixed(1) : '0.0'}%
                     </span>
                   </div>
                 </td>

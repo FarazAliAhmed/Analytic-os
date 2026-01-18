@@ -9,6 +9,9 @@ interface TokenHoldingResponse {
     tokenId: string
     quantity: number
     averagePrice: number
+    totalInvested: number
+    accumulatedYield: number
+    lastYieldUpdate: Date
     token: {
       id: string
       name: string
@@ -82,8 +85,11 @@ export async function GET(): Promise<NextResponse<TokenHoldingResponse>> {
         return {
           id: holding.id,
           tokenId: holding.tokenId,
-          quantity: holding.quantity,
+          quantity: Number(holding.quantity),
           averagePrice: Number(holding.averagePrice),
+          totalInvested: Number(holding.totalInvested),
+          accumulatedYield: Number(holding.accumulatedYield),
+          lastYieldUpdate: holding.lastYieldUpdate,
           token: DEFAULT_INV_TOKEN,
         }
       }
@@ -93,8 +99,11 @@ export async function GET(): Promise<NextResponse<TokenHoldingResponse>> {
       return {
         id: holding.id,
         tokenId: holding.tokenId,
-        quantity: holding.quantity,
+        quantity: Number(holding.quantity),
         averagePrice: Number(holding.averagePrice),
+        totalInvested: Number(holding.totalInvested),
+        accumulatedYield: Number(holding.accumulatedYield),
+        lastYieldUpdate: holding.lastYieldUpdate,
         token: {
           id: token.id,
           name: token.name,

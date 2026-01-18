@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiInfo, FiChevronDown } from 'react-icons/fi';
+import { formatCurrency, formatLargeNumber, getFullValue } from '@/lib/utils/formatNumber';
 
 interface OverviewCardProps {
   walletBalance?: number;
@@ -71,7 +72,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
     const nairaAmount = currency === 'NGN' ? inputAmount : inputAmount * USDT_TO_NGN;
     
     if (!inputAmount || nairaAmount < tokenPrice) {
-      setError(`Minimum purchase is ${formatCurrency(tokenPrice)}`);
+      setError(`Minimum purchase is ${formatCurrencyLocal(tokenPrice)}`);
       return;
     }
 
@@ -136,8 +137,8 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
       if (data.success) {
         const nairaReceived = data.sale.nairaReceived;
         const displayAmount = currency === 'NGN' 
-          ? `₦${nairaReceived.toLocaleString('en-NG')}` 
-          : `$${(nairaReceived / USDT_TO_NGN).toFixed(2)}`;
+          ? `₦${Math.round(nairaReceived).toLocaleString('en-NG')}` 
+          : `$${Math.round(nairaReceived / USDT_TO_NGN).toLocaleString('en-US')}`;
         setSuccessMessage(`Sale successful! ${tokensToSell} ${tokenSymbol} sold for ${displayAmount}`);
         setTokenBalance(data.sale.newTokenBalance);
         setAmount('');
@@ -152,19 +153,19 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
     }
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrencyLocal = (value: number) => {
     if (currency === 'NGN') {
-      return `₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return formatCurrency(value);
     } else {
-      return `$${(value / USDT_TO_NGN).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return `$${Math.round(value / USDT_TO_NGN).toLocaleString('en-US')}`;
     }
   };
 
   const getAvailableBalance = () => {
     if (currency === 'NGN') {
-      return (walletBalance / 100).toLocaleString('en-NG');
+      return Math.round(walletBalance / 100).toLocaleString('en-NG');
     } else {
-      return ((walletBalance / 100) / USDT_TO_NGN).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return Math.round((walletBalance / 100) / USDT_TO_NGN).toLocaleString('en-US');
     }
   };
 
@@ -178,7 +179,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
       return `${tokens} ${tokenSymbol}`;
     } else {
       const value = tokensAmount * tokenPrice;
-      return formatCurrency(value);
+      return formatCurrencyLocal(value);
     }
   };
 
@@ -212,10 +213,23 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           </div>
         </div>
         <div>
+          <div className="text-gray-400">Volume</div>
+          <div 
+            className="font-semibold text-white cursor-help" 
+            title={tokenData ? getFullValue(tokenData.volume / 100) : '---'}
+          >
+            {tokenData ? formatLargeNumber(tokenData.volume / 100) : '---'}
+          </div>
+        </div>
+        <div>
           <div className="text-gray-400">Yield Payout</div>
           <div className="font-semibold text-white">
-            {tokenData ? `₦${((tokenData.price / 100) * (tokenData.annualYield / 100)).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---'}
+            {tokenData ? formatCurrency((tokenData.price / 100) * (tokenData.annualYield / 100)) : '---'}
           </div>
+        </div>
+        <div>
+          <div className="text-gray-400">Transactions</div>
+          <div className="font-semibold text-white">{tokenData?.transactionCount || 0}</div>
         </div>
         <div>
           <div className="text-gray-400">Date of Listing</div>
@@ -356,7 +370,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
         <div className="flex justify-between text-xs mt-1">
           {tradeType === 'buy' ? (
             <>
-              <span className="text-red-500">Min: {formatCurrency(tokenPrice)}</span>
+              <span className="text-red-500">Min: {formatCurrencyLocal(tokenPrice)}</span>
               <span className="text-green-400">Available: {getCurrencySymbol()}{getAvailableBalance()}</span>
             </>
           ) : (
@@ -385,8 +399,8 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
                 className="flex-1 bg-[#181A20] text-gray-300 rounded py-1 hover:bg-[#353945] disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium"
               >
                 {currency === 'NGN' 
-                  ? `₦${amt.toLocaleString('en-NG')}` 
-                  : `$${displayAmount.toFixed(2)}`
+                  ? `₦${Math.round(amt).toLocaleString('en-NG')}` 
+                  : `$${Math.round(displayAmount)}`
                 }
               </button>
             );

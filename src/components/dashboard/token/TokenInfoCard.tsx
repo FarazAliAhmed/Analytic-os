@@ -66,18 +66,6 @@ const TokenInfoCard: React.FC<TokenInfoCardProps> = ({ token }) => {
           <span className="text-white font-medium">{investmentType}</span>
         </div>
 
-        {/* Volume */}
-        <div className="flex justify-between items-center">
-          <span className="text-white">Volume</span>
-          <span className="text-white font-medium">₦{volume}</span>
-        </div>
-
-        {/* Transaction Count */}
-        <div className="flex justify-between items-center">
-          <span className="text-white">Transactions</span>
-          <span className="text-white font-medium">{transactionCount}</span>
-        </div>
-
         {/* Date of Listing */}
         <div className="flex justify-between items-center">
           <span className="text-white">Date of Listing</span>

@@ -62,7 +62,10 @@ const AccountContainer = () => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+          phone: formData.phone,
           image: imageUrl,
         }),
       });
@@ -72,14 +75,28 @@ const AccountContainer = () => {
       if (!res.ok) {
         setMessage(data.error || "Failed to update profile");
       } else {
-        await updateSession();
+        // Update the session with new data
+        await updateSession({
+          ...session,
+          user: {
+            ...session?.user,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            name: formData.username,
+            phone: formData.phone,
+            image: imageUrl,
+          },
+        });
+        
         setMessage("Profile updated successfully!");
         if (preview) {
           setPreview(null);
         }
+        
+        // Reload the page after a short delay to show updated data
         setTimeout(() => {
-          setMessage("");
-        }, 2000);
+          window.location.reload();
+        }, 1500);
       }
     } catch (error) {
       setMessage("Something went wrong");
@@ -217,11 +234,10 @@ const AccountContainer = () => {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full bg-[#1A1A1A] border border-[#23262F] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#4459FF]"
+                  disabled
+                  className="w-full bg-[#1A1A1A] border border-[#23262F] rounded-lg px-4 py-2.5 text-gray-500 cursor-not-allowed opacity-60"
                 />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
               </div>
 
               <div>

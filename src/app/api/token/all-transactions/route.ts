@@ -16,15 +16,23 @@ export async function GET() {
       }
     })
 
-    const transactions = purchases.map((p) => ({
-      id: p.id,
-      date: p.createdAt.toISOString(),
-      type: 'buy' as const,
-      ngn: p.nairaAmountSpent,
-      amount: p.tokensReceived,
-      price: p.nairaAmountSpent / p.tokensReceived,
-      maker: p.user?.userId?.slice(0, 6) + '...' || p.userId.slice(0, 6) + '...',
-    }))
+    const transactions = purchases.map((p) => {
+      const userId = p.user?.userId || p.userId
+      // Format: Show first 8 chars + ... + last 4 chars (e.g., EWonZrNY...keb2)
+      const makerDisplay = userId.length > 16 
+        ? `${userId.slice(0, 8)}...${userId.slice(-4)}`
+        : userId
+      
+      return {
+        id: p.id,
+        date: p.createdAt.toISOString(),
+        type: 'buy' as const,
+        ngn: p.nairaAmountSpent,
+        amount: p.tokensReceived,
+        price: p.nairaAmountSpent / p.tokensReceived,
+        maker: makerDisplay,
+      }
+    })
 
     return NextResponse.json({ success: true, transactions })
   } catch (error) {
