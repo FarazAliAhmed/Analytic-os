@@ -74,7 +74,13 @@ export default function StartupCard({ name, symbol, price, change, logo, tokenId
         >
             <div className="flex items-center justify-between w-full mb-1">
                 <div className="flex items-center gap-2">
-                    <Image src={logo} alt={symbol} width={28} height={28} className="rounded-full" />
+                    {logo ? (
+                        <Image src={logo} alt={symbol} width={28} height={28} className="rounded-full" />
+                    ) : (
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                            {symbol.substring(0, 2)}
+                        </div>
+                    )}
                     <div>
                         <div className="font-bold text-white text-base leading-tight">{symbol}</div>
                         <div className="text-xs text-gray-400 leading-tight">{name}</div>

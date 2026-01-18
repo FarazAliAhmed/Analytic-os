@@ -28,7 +28,7 @@ const AccountContainer = () => {
       setFormData({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
-        username: user.name || "",
+        username: user.username || user.name || "",
         email: user.email || "",
         phone: user.phone || "",
       });
@@ -83,6 +83,7 @@ const AccountContainer = () => {
             firstName: formData.firstName,
             lastName: formData.lastName,
             name: formData.username,
+            username: formData.username,
             phone: formData.phone,
             image: imageUrl,
           },
@@ -92,11 +93,6 @@ const AccountContainer = () => {
         if (preview) {
           setPreview(null);
         }
-        
-        // Reload the page after a short delay to show updated data
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
       }
     } catch (error) {
       setMessage("Something went wrong");

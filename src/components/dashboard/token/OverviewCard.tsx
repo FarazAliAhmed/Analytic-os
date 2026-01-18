@@ -48,10 +48,13 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           if (token) {
             setTokenPrice(token.price / 100);
             setTokenData(token);
-            setError(''); // Clear error if token found
+            // Only clear error if token is found
           } else {
+            // Only set error after loading is complete
             setError('Token not found');
           }
+        } else {
+          setError('Failed to load token data');
         }
       } catch (err) {
         console.error('Failed to fetch token data:', err);
@@ -279,14 +282,14 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
       </div>
 
       {/* Success Message */}
-      {successMessage && (
+      {successMessage && !dataLoading && (
         <div className="mb-2 p-1.5 bg-green-500/20 text-green-400 text-xs rounded text-center">
           {successMessage}
         </div>
       )}
 
       {/* Error Message */}
-      {error && (
+      {error && !dataLoading && (
         <div className="mb-2 p-1.5 bg-red-500/20 text-red-400 text-xs rounded text-center">
           {error}
         </div>

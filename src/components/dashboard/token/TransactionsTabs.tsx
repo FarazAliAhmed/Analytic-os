@@ -289,7 +289,15 @@ const TransactionsTabs: React.FC = () => {
                                             <td className="py-3 px-4 text-white">{h.userId}</td>
                                             <td className="py-3 px-4 text-white">{h.percent}%</td>
                                             <td className="py-3 px-4 text-white">{h.amount}</td>
-                                            <td className="py-3 px-4 text-white font-bold">{formatCompactNumber(h.value)}</td>
+                                            <td className="py-3 px-4 text-white font-bold">
+                                                <div className="relative group inline-block">
+                                                    <span className="cursor-help">{formatCompactNumber(h.value)}</span>
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-10 border border-gray-700">
+                                                        ₦{h.value.toLocaleString()}
+                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

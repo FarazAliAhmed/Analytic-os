@@ -75,7 +75,13 @@ export default function GainerRow({
                 />
             </td>
             <td className="py-3 px-4 flex items-center gap-3">
-                <Image src={logo} alt={name} width={28} height={28} className="rounded-full" />
+                {logo ? (
+                    <Image src={logo} alt={name} width={28} height={28} className="rounded-full" />
+                ) : (
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                        {name.substring(0, 2)}
+                    </div>
+                )}
                 <div>
                     <div className="font-semibold">{name}</div>
                     <div className="text-xs text-gray-400">{company}</div>
