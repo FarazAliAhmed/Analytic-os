@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FaDollarSign, FaChartLine, FaRegCalendarAlt } from 'react-icons/fa'
+import { FaChartLine, FaRegCalendarAlt } from 'react-icons/fa'
 
 interface PortfolioData {
     totalInvested: number
@@ -109,7 +109,7 @@ export default function PortfolioSummary() {
                         </span>
                     )}
                     <div className="flex items-center gap-2 text-gray-400 text-lg">
-                        <FaDollarSign /> Total Portfolio Value
+                        <span className="text-xl font-bold">₦</span> Total Portfolio Value
                     </div>
                     <div className="text-3xl font-bold text-white">
                         {formatNaira(totalInvested)}
