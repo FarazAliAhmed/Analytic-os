@@ -71,6 +71,25 @@ export async function notifyTokenPurchase(
 }
 
 /**
+ * Create notification for token sale
+ */
+export async function notifyTokenSale(
+  userId: string,
+  tokenSymbol: string,
+  tokensSold: number,
+  amountReceived: number
+) {
+  const nairaAmount = amountReceived.toLocaleString('en-NG')
+  await createNotification({
+    userId,
+    type: 'transaction',
+    title: 'Token Sale Successful',
+    message: `You successfully sold ${tokensSold} units of ${tokenSymbol} for ₦${nairaAmount}.`,
+    metadata: { tokenSymbol, tokensSold, amountReceived, type: 'sale' }
+  })
+}
+
+/**
  * Create notification for withdrawal
  */
 export async function notifyWithdrawal(

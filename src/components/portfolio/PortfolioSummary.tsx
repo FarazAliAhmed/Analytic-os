@@ -9,6 +9,8 @@ interface PortfolioData {
     yieldPercentage: number
     transactionCount: number
     buyCount: number
+    sellCount: number
+    holdCount: number
     lastUpdated: string
 }
 
@@ -84,12 +86,14 @@ export default function PortfolioSummary() {
         )
     }
 
-    const { totalInvested, totalYield, yieldPercentage, transactionCount, buyCount } = portfolioData || {
+    const { totalInvested, totalYield, yieldPercentage, transactionCount, buyCount, sellCount, holdCount } = portfolioData || {
         totalInvested: 0,
         totalYield: 0,
         yieldPercentage: 0,
         transactionCount: 0,
-        buyCount: 0
+        buyCount: 0,
+        sellCount: 0,
+        holdCount: 0
     }
 
     return (
@@ -149,7 +153,9 @@ export default function PortfolioSummary() {
                         {transactionCount} {transactionCount === 1 ? 'Transaction' : 'Transactions'}
                     </div>
                     <div className="text-gray-400 text-sm font-medium">
-                        {buyCount > 0 ? `${buyCount} ${buyCount === 1 ? 'buy' : 'buys'}` : '0 Transactions'}
+                        {buyCount > 0 || sellCount > 0 || holdCount > 0
+                            ? `${buyCount} ${buyCount === 1 ? 'buy' : 'buys'}, ${sellCount} ${sellCount === 1 ? 'sell' : 'sells'}, ${holdCount} ${holdCount === 1 ? 'hold' : 'holds'}` 
+                            : '0 Transactions'}
                     </div>
                 </div>
             </div>

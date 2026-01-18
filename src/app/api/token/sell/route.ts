@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notifyTokenSale } from '@/lib/notifications'
 
 const sellTokenSchema = z.object({
   tokenSymbol: z.string().min(1, 'Token symbol is required'),
@@ -138,6 +139,14 @@ export async function POST(request: NextRequest) {
         transaction: saleTransaction
       }
     })
+
+    // Send notification to user
+    await notifyTokenSale(
+      session.user.id,
+      token.symbol,
+      data.tokensToSell,
+      nairaReceived
+    )
 
     return NextResponse.json({
       success: true,

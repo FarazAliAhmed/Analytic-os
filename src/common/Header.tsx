@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
 import SignInModal from '@/components/dashboard/SignInModal'
 import SignUpModal from '@/components/dashboard/SignUpModal'
 import { WalletInfo } from '@/components/dashboard/WalletInfo'
@@ -20,6 +21,7 @@ export default function Header({
   onOpenSidebar
 }: HeaderProps) {
   const { data: session, status } = useSession()
+  const pathname = usePathname()
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -28,6 +30,14 @@ export default function Header({
 
   // Get token data from context
   const { tokenSymbol, tokenPrice, tokenChange, tokenPercentChange, isInWatchlist, toggleWatchlist } = useToken()
+
+  // Determine page title based on pathname
+  const getPageTitle = () => {
+    if (tokenSymbol) return tokenSymbol
+    if (pathname?.includes('/portfolio')) return 'Portfolio'
+    if (pathname?.includes('/account')) return 'Account'
+    return 'Dashboard'
+  }
 
   // Use NGN wallet hook
   const { balance, wallet, hasWallet, isLoading, createWallet, mutateWallet } = useWallet()
@@ -109,7 +119,7 @@ export default function Header({
             )}
             
             <h1 className="text-2xl font-bold text-white tracking-tight">
-              {tokenSymbol || 'Dashboard'}
+              {getPageTitle()}
             </h1>
             
             {/* Price - Only show if on token page */}

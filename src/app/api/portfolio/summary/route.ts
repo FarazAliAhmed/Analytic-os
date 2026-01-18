@@ -9,8 +9,10 @@ interface PortfolioSummaryResponse {
     totalInvested: number      // Sum of nairaAmountSpent in Naira
     totalYield: number         // Accumulated yield in Naira
     yieldPercentage: number    // Yield as percentage of investment
-    transactionCount: number   // Transactions in last 30 days
+    transactionCount: number   // Total transactions (buy + sell) in last 30 days
     buyCount: number           // Buy transactions count
+    sellCount: number          // Sell transactions count
+    holdCount: number          // Number of different tokens currently held
     lastUpdated: string        // ISO timestamp
   }
   error?: string
@@ -95,6 +97,7 @@ export async function GET(): Promise<NextResponse<PortfolioSummaryResponse>> {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
+    // Count buy transactions
     const recentPurchases = await prisma.tokenPurchase.count({
       where: {
         userId,
@@ -102,6 +105,27 @@ export async function GET(): Promise<NextResponse<PortfolioSummaryResponse>> {
         createdAt: { gte: thirtyDaysAgo }
       }
     })
+
+    // Count sell transactions
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId }
+    })
+
+    const recentSales = wallet ? await prisma.transaction.count({
+      where: {
+        walletId: wallet.id,
+        type: 'credit',
+        status: 'completed',
+        description: { contains: 'Sold' },
+        createdAt: { gte: thirtyDaysAgo }
+      }
+    }) : 0
+
+    // Total transactions = buy + sell
+    const totalTransactions = recentPurchases + recentSales
+
+    // Count number of different tokens currently held (holdings with quantity > 0)
+    const holdCount = holdings.length
 
     // Calculate yield percentage
     const yieldPercentage = totalInvested > 0 
@@ -114,8 +138,10 @@ export async function GET(): Promise<NextResponse<PortfolioSummaryResponse>> {
         totalInvested,
         totalYield: Math.round(totalYield * 100) / 100, // Round to 2 decimal places
         yieldPercentage: Math.round(yieldPercentage * 100) / 100,
-        transactionCount: recentPurchases,
-        buyCount: recentPurchases, // Currently only buy transactions
+        transactionCount: totalTransactions,
+        buyCount: recentPurchases,
+        sellCount: recentSales,
+        holdCount,
         lastUpdated: new Date().toISOString()
       }
     })
