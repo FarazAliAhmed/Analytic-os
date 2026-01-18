@@ -23,9 +23,14 @@ function TokenPageContent() {
     const [token, setToken] = useState<TokenData | null>(null);
     const [isInWatchlist, setIsInWatchlist] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     // Get context functions
     const { setTokenData, clearTokenData } = useToken();
+
+    const handleDataRefresh = () => {
+        setRefreshKey(prev => prev + 1);
+    };
 
     useEffect(() => {
         let isMounted = true;
@@ -90,7 +95,7 @@ function TokenPageContent() {
             isMounted = false;
             clearTokenData();
         };
-    }, [tokenSymbol, setTokenData, clearTokenData]);
+    }, [tokenSymbol, setTokenData, clearTokenData, refreshKey]); // Add refreshKey as dependency
 
     const toggleWatchlist = async () => {
         if (!token) return;
@@ -140,10 +145,10 @@ function TokenPageContent() {
                 {/* Main Content */}
                 <div className="lg:col-span-3 space-y-6">
                     <ChartCard />
-                    <TransactionsTabs />
+                    <TransactionsTabs refreshKey={refreshKey} />
                 </div>
                 {/* Sidebar */}
-                <Sidebar tokenSymbol={token?.symbol} />
+                <Sidebar tokenSymbol={token?.symbol} onDataRefresh={handleDataRefresh} />
             </div>
         </div>
     );

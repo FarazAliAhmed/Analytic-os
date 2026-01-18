@@ -52,7 +52,11 @@ interface TokenData {
     contractAddress: string | null
 }
 
-const TransactionsTabs: React.FC = () => {
+interface TransactionsTabsProps {
+    refreshKey?: number; // Add refresh key to trigger data reload
+}
+
+const TransactionsTabs: React.FC<TransactionsTabsProps> = ({ refreshKey = 0 }) => {
     const searchParams = useSearchParams();
     const tokenSymbol = searchParams.get('symbol') || 'NG';
     
@@ -79,6 +83,23 @@ const TransactionsTabs: React.FC = () => {
     }
 
     useEffect(() => {
+        // Fetch holder count on mount to display in tab
+        const fetchHolderCount = async () => {
+            try {
+                const res = await fetch(`/api/token/holders?symbol=${tokenSymbol}`);
+                const data = await res.json();
+                if (data.success) {
+                    setTotalHolders(data.totalHolders);
+                }
+            } catch (err) {
+                console.error('Failed to fetch holder count:', err);
+            }
+        };
+        
+        fetchHolderCount();
+    }, [tokenSymbol, refreshKey]);
+
+    useEffect(() => {
         if (activeTab === 0) {
             fetchAllTransactions();
         } else if (activeTab === 1) {
@@ -88,7 +109,7 @@ const TransactionsTabs: React.FC = () => {
         } else if (activeTab === 3) {
             fetchTokenData();
         }
-    }, [activeTab, tokenSymbol]);
+    }, [activeTab, tokenSymbol, refreshKey]); // Add refreshKey as dependency
 
     const fetchTokenData = async () => {
         setLoading(true);

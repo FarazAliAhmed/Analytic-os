@@ -7,12 +7,13 @@ import { formatCurrency, formatLargeNumber, getFullValue } from '@/lib/utils/for
 interface OverviewCardProps {
   walletBalance?: number;
   tokenSymbol?: string;
+  onTradeComplete?: () => void; // Callback to refresh data after trade
 }
 
 type Currency = 'NGN' | 'USDT';
 type TradeType = 'buy' | 'sell';
 
-const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSymbol = 'INV' }) => {
+const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSymbol = 'INV', onTradeComplete }) => {
   const [amount, setAmount] = useState('');
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(1500);
@@ -95,6 +96,12 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
         setSuccessMessage(`Purchase successful! ${data.purchase.tokensReceived} ${tokenSymbol} added to your holdings.`);
         setTokenBalance(data.purchase.newTokenBalance);
         setAmount('');
+        
+        // Trigger refresh of all data
+        if (onTradeComplete) {
+          onTradeComplete();
+        }
+        
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError(data.error || 'Purchase failed');
