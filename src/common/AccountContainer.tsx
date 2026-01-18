@@ -15,12 +15,25 @@ const AccountContainer = () => {
   const user = session?.user;
 
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    username: user?.name || "",
-    email: user?.email || "",
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
     phone: "",
   });
+
+  // Update form data when session loads
+  React.useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        username: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
 
   const [pushNotifications, setPushNotifications] = useState(false);
   const [autoLock, setAutoLock] = useState(false);
