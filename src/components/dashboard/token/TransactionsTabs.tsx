@@ -135,7 +135,7 @@ const TransactionsTabs: React.FC = () => {
     const fetchAllTransactions = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/token/all-transactions');
+            const res = await fetch(`/api/token/all-transactions?symbol=${tokenSymbol}`);
             const data = await res.json();
             if (data.success) {
                 setAllTransactions(data.transactions || []);
@@ -150,7 +150,7 @@ const TransactionsTabs: React.FC = () => {
     const fetchMyTransactions = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/token/transactions');
+            const res = await fetch(`/api/token/transactions?symbol=${tokenSymbol}`);
             const data = await res.json();
             if (data.success) {
                 setMyTransactions(data.transactions || []);

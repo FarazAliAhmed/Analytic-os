@@ -2,11 +2,22 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 /**
- * GET /api/token/all-transactions - Get all token transactions (public feed)
+ * GET /api/token/all-transactions?symbol=XXX - Get all transactions for a specific token
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const symbol = searchParams.get('symbol')
+
+    if (!symbol) {
+      return NextResponse.json({ success: false, error: 'Token symbol is required' }, { status: 400 })
+    }
+
     const purchases = await prisma.tokenPurchase.findMany({
+      where: {
+        tokenId: symbol,
+        status: 'completed'
+      },
       orderBy: { createdAt: 'desc' },
       take: 50, // Limit to last 50 transactions
       include: {
@@ -28,8 +39,8 @@ export async function GET() {
         date: p.createdAt.toISOString(),
         type: 'buy' as const,
         ngn: p.nairaAmountSpent,
-        amount: p.tokensReceived,
-        price: p.nairaAmountSpent / p.tokensReceived,
+        amount: Number(p.tokensReceived),
+        price: p.nairaAmountSpent / Number(p.tokensReceived),
         maker: makerDisplay,
       }
     })
