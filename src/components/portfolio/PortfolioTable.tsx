@@ -13,6 +13,7 @@ interface HoldingsToken {
   totalInvested: number
   accumulatedYield: number
   lastYieldUpdate: Date
+  tokenSharePercent: number // User's share of this token
   token: {
     id: string
     name: string
@@ -182,12 +183,12 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                       <div
                         className="h-2 bg-white rounded"
                         style={{ 
-                          width: `${totalPortfolioValue > 0 ? Math.min(100, (holding.totalInvested / totalPortfolioValue) * 100) : 0}%` 
+                          width: `${Math.min(100, holding.tokenSharePercent)}%` 
                         }}
                       />
                     </div>
                     <span className="text-xs text-gray-400">
-                      {totalPortfolioValue > 0 ? ((holding.totalInvested / totalPortfolioValue) * 100).toFixed(1) : '0.0'}%
+                      {holding.tokenSharePercent.toFixed(2)}%
                     </span>
                   </div>
                 </td>

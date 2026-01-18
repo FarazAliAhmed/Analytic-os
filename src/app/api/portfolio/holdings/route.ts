@@ -12,6 +12,7 @@ interface TokenHoldingResponse {
     totalInvested: number
     accumulatedYield: number
     lastYieldUpdate: Date
+    tokenSharePercent: number // User's share of this token
     token: {
       id: string
       name: string
@@ -76,9 +77,27 @@ export async function GET(): Promise<NextResponse<TokenHoldingResponse>> {
     // Create a map of symbol -> token
     const tokenMap = new Map(tokens.map(t => [t.symbol, t]))
 
-    // Build response with token details
-    const holdingsWithTokens = holdings.map(holding => {
+    // Build response with token details and calculate share percentages
+    const holdingsWithTokens = await Promise.all(holdings.map(async (holding) => {
       const token = tokenMap.get(holding.tokenId)
+      
+      // Calculate user's share of this token
+      // Get total invested amount for this token across all users
+      const tokenTotalInvested = await prisma.tokenHolding.aggregate({
+        where: {
+          tokenId: holding.tokenId,
+          quantity: { gt: 0 }
+        },
+        _sum: {
+          totalInvested: true
+        }
+      })
+      
+      const totalVolumeInvested = Number(tokenTotalInvested._sum.totalInvested || 0)
+      const userInvested = Number(holding.totalInvested)
+      const tokenSharePercent = totalVolumeInvested > 0 
+        ? (userInvested / totalVolumeInvested) * 100 
+        : 0
       
       // Use default INV token if not found in Token table
       if (!token && holding.tokenId === 'INV') {
@@ -87,9 +106,10 @@ export async function GET(): Promise<NextResponse<TokenHoldingResponse>> {
           tokenId: holding.tokenId,
           quantity: Number(holding.quantity),
           averagePrice: Number(holding.averagePrice),
-          totalInvested: Number(holding.totalInvested),
+          totalInvested: userInvested,
           accumulatedYield: Number(holding.accumulatedYield),
           lastYieldUpdate: holding.lastYieldUpdate,
+          tokenSharePercent: parseFloat(tokenSharePercent.toFixed(2)),
           token: DEFAULT_INV_TOKEN,
         }
       }
@@ -101,9 +121,10 @@ export async function GET(): Promise<NextResponse<TokenHoldingResponse>> {
         tokenId: holding.tokenId,
         quantity: Number(holding.quantity),
         averagePrice: Number(holding.averagePrice),
-        totalInvested: Number(holding.totalInvested),
+        totalInvested: userInvested,
         accumulatedYield: Number(holding.accumulatedYield),
         lastYieldUpdate: holding.lastYieldUpdate,
+        tokenSharePercent: parseFloat(tokenSharePercent.toFixed(2)),
         token: {
           id: token.id,
           name: token.name,
@@ -115,11 +136,13 @@ export async function GET(): Promise<NextResponse<TokenHoldingResponse>> {
           logoUrl: token.logoUrl,
         },
       }
-    }).filter((h): h is NonNullable<typeof h> => h !== null)
+    }))
+
+    const filteredHoldings = holdingsWithTokens.filter((h): h is NonNullable<typeof h> => h !== null)
 
     return NextResponse.json({
       success: true,
-      holdings: holdingsWithTokens,
+      holdings: filteredHoldings,
     })
   } catch (error) {
     console.error('Portfolio holdings error:', error)
