@@ -190,7 +190,7 @@ const TransactionsTabs: React.FC = () => {
                         ) : (
                             <table className="min-w-full text-left text-sm">
                                 <thead>
-                                    <tr className="text-gray-500 text-xs uppercase">
+                                    <tr className="text-white text-xs uppercase">
                                         <th className="py-3 px-4 font-normal">Date</th>
                                         <th className="py-3 px-4 font-normal">Type</th>
                                         <th className="py-3 px-4 font-normal">NGN</th>
@@ -226,7 +226,7 @@ const TransactionsTabs: React.FC = () => {
                         ) : (
                             <table className="min-w-full text-left text-sm">
                                 <thead>
-                                    <tr className="text-gray-500 text-xs uppercase">
+                                    <tr className="text-white text-xs uppercase">
                                         <th className="py-3 px-4 font-normal">Date</th>
                                         <th className="py-3 px-4 font-normal">Type</th>
                                         <th className="py-3 px-4 font-normal">NGN</th>
@@ -260,7 +260,7 @@ const TransactionsTabs: React.FC = () => {
                         ) : (
                             <table className="min-w-full text-left text-sm">
                                 <thead>
-                                    <tr className="text-gray-500 text-xs uppercase">
+                                    <tr className="text-white text-xs uppercase">
                                         <th className="py-3 px-4 font-normal">Rank</th>
                                         <th className="py-3 px-4 font-normal">User ID</th>
                                         <th className="py-3 px-4 font-normal">%</th>
