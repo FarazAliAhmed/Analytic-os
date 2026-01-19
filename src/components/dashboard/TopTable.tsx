@@ -154,7 +154,7 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
                 annualYield={`${token.annualYield}%`}
                 yieldPayout={`₦${Math.round(yieldPayout).toLocaleString('en-NG')}`}
                 marketCap={`₦${token.volume.toLocaleString()}`}
-                chart="/icons/chart.svg"}
+                chart="/icons/chart.svg"
                 tokenId={token.symbol}
                 initialIsInWatchlist={watchlistIds.includes(token.symbol)}
                 onWatchlistToggle={onWatchlistToggle}
