@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       await tx.token.update({
         where: { id: token.id },
         data: {
-          volume: { increment: amountInKobo },
+          volume: { increment: data.nairaAmount }, // Increment in Naira, not kobo
           transactionCount: { increment: 1 }
         }
       })
