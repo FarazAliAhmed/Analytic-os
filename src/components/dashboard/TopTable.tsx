@@ -17,6 +17,10 @@ interface YieldPayouts {
   [tokenSymbol: string]: number;
 }
 
+interface PeriodVolumes {
+  [tokenSymbol: string]: number;
+}
+
 interface TopTableProps {
   activeTab?: string;
   timePeriod?: '1d' | '7d' | '30d' | '1yr';
@@ -29,6 +33,7 @@ type TimePeriod = '1d' | '7d' | '30d' | '1yr';
 export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchlistIds, onWatchlistToggle }: TopTableProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [yieldPayouts, setYieldPayouts] = useState<YieldPayouts>({});
+  const [periodVolumes, setPeriodVolumes] = useState<PeriodVolumes>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,13 +47,21 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
         const yieldRes = await fetch(`/api/tokens/yield-payouts?period=${timePeriod}`);
         const yieldData = await yieldRes.json();
         
+        // Fetch period-based volumes
+        const volumeRes = await fetch(`/api/tokens/period-volume?period=${timePeriod}`);
+        const volumeData = await volumeRes.json();
+        
         if (tokensData.success) {
           let filtered = [...tokensData.tokens];
           
           // Filter based on active tab
           if (activeTab === 'volume') {
-            // Sort by volume (highest first)
-            filtered = filtered.sort((a: Token, b: Token) => b.volume - a.volume);
+            // Sort by period volume (highest first)
+            filtered = filtered.sort((a: Token, b: Token) => {
+              const aVolume = volumeData.success ? (volumeData.volumes[a.symbol] || 0) : a.volume;
+              const bVolume = volumeData.success ? (volumeData.volumes[b.symbol] || 0) : b.volume;
+              return bVolume - aVolume;
+            });
           } else if (activeTab === 'upcoming') {
             // Show tokens with future listing dates
             const now = new Date();
@@ -68,6 +81,10 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
         
         if (yieldData.success) {
           setYieldPayouts(yieldData.yieldPayouts);
+        }
+        
+        if (volumeData.success) {
+          setPeriodVolumes(volumeData.volumes);
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -142,6 +159,11 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
             // Get real yield payout from API data, fallback to 0
             const yieldPayout = yieldPayouts[token.symbol] || 0;
             
+            // Get period-based volume, fallback to total volume
+            const displayVolume = periodVolumes[token.symbol] !== undefined 
+              ? periodVolumes[token.symbol] 
+              : token.volume;
+            
             return (
               <GainerRow
                 key={token.id}
@@ -153,7 +175,7 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
                 industry={token.industry}
                 annualYield={`${token.annualYield}%`}
                 yieldPayout={`₦${Math.round(yieldPayout).toLocaleString('en-NG')}`}
-                marketCap={`₦${token.volume.toLocaleString()}`}
+                marketCap={`₦${Math.round(displayVolume).toLocaleString('en-NG')}`}
                 chart="/icons/chart.svg"
                 tokenId={token.symbol}
                 initialIsInWatchlist={watchlistIds.includes(token.symbol)}
