@@ -1,9 +1,10 @@
 "use client";
 
-import { Camera, Save } from "lucide-react";
+import { Camera, Save, RefreshCw } from "lucide-react";
 import { useSession } from "next-auth/react";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import ToggleSwitch from "./ToggleSwitch";
+import { useCurrency } from "@/hooks/useCurrency";
 
 const AccountContainer = () => {
   const { data: session, update: updateSession } = useSession();
@@ -11,6 +12,7 @@ const AccountContainer = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   const user = session?.user;
 
@@ -22,8 +24,48 @@ const AccountContainer = () => {
     phone: "",
   });
 
+  // Currency hook
+  const { currency, exchangeRate, loading: currencyLoading, setCurrency } = useCurrency('NGN');
+
+  // Settings state
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [autoLock, setAutoLock] = useState(false);
+  const [priceAlerts, setPriceAlerts] = useState(false);
+  const [hideBalances, setHideBalances] = useState(false);
+
+  // Load user settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        
+        if (data.success) {
+          const settings = data.data;
+          setAutoLock(settings.autoLockEnabled);
+          setCurrency(settings.currencyPreference as 'NGN' | 'USD');
+          
+          // Load notification preferences
+          const notifPrefs = settings.notificationPreferences as any;
+          if (notifPrefs?.webApp) {
+            setPushNotifications(notifPrefs.webApp.transactions);
+            setPriceAlerts(notifPrefs.webApp.priceAlerts);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    if (user) {
+      loadSettings();
+    }
+  }, [user]);
+
   // Update form data when session loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       setFormData({
         firstName: user.firstName || "",
@@ -35,11 +77,6 @@ const AccountContainer = () => {
     }
   }, [user]);
 
-  const [pushNotifications, setPushNotifications] = useState(false);
-  const [autoLock, setAutoLock] = useState(false);
-  const [priceAlerts, setPriceAlerts] = useState(false);
-  const [hideBalances, setHideBalances] = useState(false);
-
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -48,6 +85,38 @@ const AccountContainer = () => {
         setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCurrencyChange = async (newCurrency: 'NGN' | 'USD') => {
+    try {
+      const res = await fetch('/api/settings/currency', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency: newCurrency })
+      });
+
+      if (res.ok) {
+        setCurrency(newCurrency);
+        setMessage(`Currency changed to ${newCurrency}`);
+        setTimeout(() => setMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to update currency:', error);
+    }
+  };
+
+  const handleAutoLockChange = async (enabled: boolean) => {
+    setAutoLock(enabled);
+    
+    try {
+      await fetch('/api/settings/auto-lock', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoLockEnabled: enabled })
+      });
+    } catch (error) {
+      console.error('Failed to update auto-lock:', error);
     }
   };
 
@@ -306,10 +375,10 @@ const AccountContainer = () => {
               <div>
                 <div className="text-white">Auto-Lock Wallet</div>
                 <div className="text-gray-400 text-xs">
-                  Lock after 15 minutes of inactivity
+                  Automatically lock yield after token purchase
                 </div>
               </div>
-              <ToggleSwitch checked={autoLock} onChange={setAutoLock} />
+              <ToggleSwitch checked={autoLock} onChange={handleAutoLockChange} />
             </div>
             <div className="flex items-center justify-between py-4">
               <div>
@@ -333,23 +402,75 @@ const AccountContainer = () => {
         </div>
 
         {/* Display Settings */}
-        <div className="bg-[#2626264D] border border-[#262626] rounded-lg p-6">
-          <div className="mb-4">
-            <div className="font-semibold text-white">Display</div>
-            <div className="text-gray-400 text-sm">Appearance settings</div>
+        <div className="bg-[#0A0A0A] border border-[#262626] rounded-lg p-6">
+          <div className="mb-6">
+            <div className="font-semibold text-white">Currency Preferences</div>
+            <div className="text-gray-400 text-sm">
+              Select your preferred currency for displaying prices
+            </div>
           </div>
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <div className="text-white">Currency Display</div>
-              <div className="text-gray-400 text-xs">
-                Select primary currency
+          
+          <div className="space-y-4">
+            {/* Currency Toggle */}
+            <div className="flex items-center justify-between py-4 border-b border-[#23262F]">
+              <div>
+                <div className="text-white">Display Currency</div>
+                <div className="text-gray-400 text-xs">
+                  All prices will be shown in this currency
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleCurrencyChange('NGN')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currency === 'NGN'
+                      ? 'bg-[#4459FF] text-white'
+                      : 'bg-[#1A1A1A] text-gray-400 hover:bg-[#23262F]'
+                  }`}
+                >
+                  NGN (₦)
+                </button>
+                <button
+                  onClick={() => handleCurrencyChange('USD')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currency === 'USD'
+                      ? 'bg-[#4459FF] text-white'
+                      : 'bg-[#1A1A1A] text-gray-400 hover:bg-[#23262F]'
+                  }`}
+                >
+                  USD ($)
+                </button>
               </div>
             </div>
-            <select className="bg-[#23262F] text-white rounded px-3 py-1">
-              <option>USD ($)</option>
-              <option>EUR (€)</option>
-              <option>GBP (£)</option>
-            </select>
+
+            {/* Exchange Rate Info */}
+            {currency === 'USD' && exchangeRate && (
+              <div className="bg-[#1A1A1A] border border-[#23262F] rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-400">Current Exchange Rate</div>
+                  <RefreshCw className="w-4 h-4 text-gray-400" />
+                </div>
+                <div className="text-lg font-semibold text-white mb-1">
+                  {exchangeRate.displayRate}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Last updated: {new Date(exchangeRate.lastUpdated).toLocaleString()}
+                </div>
+                <div className="mt-3 pt-3 border-t border-[#23262F]">
+                  <div className="text-xs text-gray-400 mb-1">Example:</div>
+                  <div className="text-sm text-white">
+                    ₦1,500 = ${(1500 * exchangeRate.rate).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currencyLoading && currency === 'USD' && (
+              <div className="text-center py-4">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-[#4459FF]"></div>
+                <div className="text-sm text-gray-400 mt-2">Loading exchange rate...</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
