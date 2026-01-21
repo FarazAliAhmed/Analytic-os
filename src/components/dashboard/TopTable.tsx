@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import GainerRow from './GainerRow';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Token {
   id: string;
@@ -35,6 +36,7 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
   const [yieldPayouts, setYieldPayouts] = useState<YieldPayouts>({});
   const [periodVolumes, setPeriodVolumes] = useState<PeriodVolumes>({});
   const [loading, setLoading] = useState(true);
+  const { formatAmount } = useCurrency();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -174,8 +176,8 @@ export default function TopTable({ activeTab = 'all', timePeriod = '30d', watchl
                 change={0}
                 industry={token.industry}
                 annualYield={`${token.annualYield}%`}
-                yieldPayout={`₦${Math.round(yieldPayout).toLocaleString('en-NG')}`}
-                marketCap={`₦${Math.round(displayVolume).toLocaleString('en-NG')}`}
+                yieldPayout={formatAmount(yieldPayout)}
+                marketCap={formatAmount(displayVolume)}
                 chart="/icons/chart.svg"
                 tokenId={token.symbol}
                 initialIsInWatchlist={watchlistIds.includes(token.symbol)}

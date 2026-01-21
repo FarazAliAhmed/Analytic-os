@@ -376,28 +376,29 @@ model UserSettings {
 
 ## Phase 5: Integration & Testing
 
-### Task 5.1: Integrate Currency Conversion Across App
+### Task 5.1: Integrate Currency Conversion Across App ✅ COMPLETED
 **Estimated Time**: 2 hours
 
-**Files to Update**:
-- `src/components/dashboard/StartupCard.tsx`
-- `src/components/dashboard/GainerRow.tsx`
-- `src/components/dashboard/token/OverviewCard.tsx`
-- `src/components/portfolio/PortfolioSummary.tsx`
-- `src/components/portfolio/PortfolioTable.tsx`
-- `src/components/dashboard/WalletInfo.tsx`
+**Files Updated**:
+- ✅ `src/components/dashboard/StartupCard.tsx`
+- ✅ `src/components/dashboard/GainerRow.tsx`
+- ✅ `src/components/dashboard/token/OverviewCard.tsx`
+- ✅ `src/components/portfolio/PortfolioSummary.tsx`
+- ✅ `src/components/portfolio/PortfolioTable.tsx`
+- ✅ `src/components/dashboard/WalletInfo.tsx`
+- ✅ `src/components/dashboard/TopTable.tsx`
 
 **Implementation**:
-- [ ] Import `useCurrency` hook in each component
-- [ ] Replace hardcoded currency formatting with `formatAmount()`
-- [ ] Ensure all prices convert based on user preference
-- [ ] Test currency switching
+- [x] Import `useCurrency` hook in each component
+- [x] Replace hardcoded currency formatting with `formatAmount()`
+- [x] Ensure all prices convert based on user preference
+- [x] Test currency switching
 
 **Acceptance Criteria**:
-- All prices convert correctly
-- Currency symbol updates (₦ or $)
-- No hardcoded currency values remain
-- Switching currency updates entire app
+- ✅ All prices convert correctly
+- ✅ Currency symbol updates (₦ or $)
+- ✅ No hardcoded currency values remain
+- ✅ Switching currency updates entire app
 
 ---
 

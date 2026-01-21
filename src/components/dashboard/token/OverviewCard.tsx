@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiInfo, FiChevronDown } from 'react-icons/fi';
 import { formatCurrency, formatLargeNumber, getFullValue } from '@/lib/utils/formatNumber';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface OverviewCardProps {
   walletBalance?: number;
@@ -26,6 +27,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
   const [currency, setCurrency] = useState<Currency>('NGN');
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [tradeType, setTradeType] = useState<TradeType>('buy');
+  const { formatAmount: formatCurrencyAmount } = useCurrency();
 
   const USDT_TO_NGN = 1650;
 
@@ -225,7 +227,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
             <div className="text-white font-bold text-lg">{tokenBalance} {tokenSymbol}</div>
             {tokenBalance > 0 && (
               <div className="text-gray-400 text-xs mt-0.5">
-                Value: {formatCurrency(tokenBalance * tokenPrice)}
+                Value: {formatCurrencyAmount(tokenBalance * tokenPrice)}
               </div>
             )}
           </div>
@@ -233,7 +235,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
       <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3 text-xs">
         <div>
           <div className="text-gray-400">Price per Unit</div>
-          <div className="font-semibold text-white">{formatCurrency(tokenPrice)}</div>
+          <div className="font-semibold text-white">{formatCurrencyAmount(tokenPrice)}</div>
         </div>
         <div>
           <div className="text-gray-400">Annual Yield</div>
@@ -258,7 +260,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
         <div>
           <div className="text-gray-400">Yield Payout</div>
           <div className="font-semibold text-white">
-            {formatCurrency(yieldPayout)}
+            {formatCurrencyAmount(yieldPayout)}
           </div>
         </div>
         <div>

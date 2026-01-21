@@ -3,7 +3,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { formatNaira } from '@/lib/utils/wallet'
+import { useCurrency } from '@/hooks/useCurrency'
 
 interface WalletInfoProps {
   balance: number // in kobo
@@ -22,12 +22,14 @@ export function WalletInfo({
   onOpenFund,
   onOpenWithdraw
 }: WalletInfoProps) {
+  const { formatAmount } = useCurrency()
+
   return (
     <div className="flex items-center gap-3 bg-[#23262F] rounded-xl px-4 py-2">
       {/* Balance */}
       <div className="text-right">
         <p className="text-xs text-gray-400">Wallet Balance</p>
-        <p className="text-sm font-semibold text-white">{formatNaira(balance)}</p>
+        <p className="text-sm font-semibold text-white">{formatAmount(balance / 100)}</p>
       </div>
 
       {/* Divider */}

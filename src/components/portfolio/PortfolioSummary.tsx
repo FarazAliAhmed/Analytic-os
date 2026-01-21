@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { FaChartLine, FaRegCalendarAlt } from 'react-icons/fa'
+import { useCurrency } from '@/hooks/useCurrency'
 
 interface PortfolioData {
     totalInvested: number
@@ -14,24 +15,11 @@ interface PortfolioData {
     lastUpdated: string
 }
 
-function formatNaira(amount: number): string {
-    const rounded = Math.round(amount)
-    // If amount is very small but not zero, show with 2 decimals
-    if (amount > 0 && rounded === 0) {
-        return `₦${amount.toFixed(2)}`
-    }
-    return new Intl.NumberFormat('en-NG', {
-        style: 'currency',
-        currency: 'NGN',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(rounded).replace('NGN', '₦')
-}
-
 export default function PortfolioSummary() {
     const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const { formatAmount } = useCurrency()
 
     useEffect(() => {
         async function fetchPortfolioSummary() {
@@ -112,10 +100,10 @@ export default function PortfolioSummary() {
                         <span className="text-xl font-bold">₦</span> Total Portfolio Value
                     </div>
                     <div className="text-3xl font-bold text-white">
-                        {formatNaira(totalInvested)}
+                        {formatAmount(totalInvested)}
                     </div>
                     <div className="text-green-400 text-sm font-medium">
-                        {totalYield > 0 ? `+${formatNaira(totalYield)} yield earned` : totalYield < 0 ? `${formatNaira(totalYield)} loss` : 'No yield earned yet'}
+                        {totalYield > 0 ? `+${formatAmount(totalYield)} yield earned` : totalYield < 0 ? `${formatAmount(totalYield)} loss` : 'No yield earned yet'}
                     </div>
                 </div>
 
@@ -132,10 +120,10 @@ export default function PortfolioSummary() {
                         <FaChartLine /> Total Yield
                     </div>
                     <div className="text-3xl font-bold text-white">
-                        {formatNaira(totalYield)}
+                        {formatAmount(totalYield)}
                     </div>
                     <div className="text-green-400 text-sm font-medium">
-                        {totalInvested > 0 ? `Based on ${formatNaira(totalInvested)} invested` : 'Start investing to earn yield'}
+                        {totalInvested > 0 ? `Based on ${formatAmount(totalInvested)} invested` : 'Start investing to earn yield'}
                     </div>
                 </div>
 

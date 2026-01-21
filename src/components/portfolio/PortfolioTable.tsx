@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import WatchlistButton from '@/components/watchlist/WatchlistButton'
 import { calculateAccumulatedYield, calculateTotalYield } from '@/lib/yield-calculator'
+import { useCurrency } from '@/hooks/useCurrency'
 
 interface HoldingsToken {
   id: string
@@ -32,15 +33,6 @@ interface PortfolioTableProps {
   onWatchlistToggle?: (tokenId: string, isInWatchlist: boolean) => void
 }
 
-function formatNaira(amount: number): string {
-  const rounded = Math.round(amount)
-  // If amount is very small but not zero, show at least ₦1
-  if (amount > 0 && rounded === 0) {
-    return `₦${amount.toFixed(2)}`
-  }
-  return `₦${rounded.toLocaleString('en-NG')}`
-}
-
 function formatUnits(units: number): string {
   // Show up to 6 decimal places, remove trailing zeros
   return units.toFixed(6).replace(/\.?0+$/, '')
@@ -48,6 +40,7 @@ function formatUnits(units: number): string {
 
 export default function PortfolioTable({ holdings, watchlistIds, onWatchlistToggle }: PortfolioTableProps) {
   const router = useRouter()
+  const { formatAmount } = useCurrency()
   
   // Calculate total portfolio value for allocation percentages
   const totalPortfolioValue = holdings.reduce((sum, h) => {
@@ -140,7 +133,7 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                   </div>
                 </td>
                 <td className="py-3 px-4">
-                  <div className="font-semibold text-white">{formatNaira(holding.token.price / 100)}</div>
+                  <div className="font-semibold text-white">{formatAmount(holding.token.price / 100)}</div>
                   <div className="text-xs text-green-400">+{Math.round(Number(holding.token.annualYield))}% APY</div>
                 </td>
                 <td className="py-3 px-4">
@@ -148,7 +141,7 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                     <div className="text-gray-500 text-sm">Not purchased</div>
                   ) : (
                     <>
-                      <div className="font-semibold text-white">{formatNaira(holding.totalInvested)}</div>
+                      <div className="font-semibold text-white">{formatAmount(holding.totalInvested)}</div>
                       <div className="text-xs text-gray-400">{formatUnits(holding.quantity)} units</div>
                     </>
                   )}
@@ -158,7 +151,7 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                     <div className="text-gray-500 text-sm">---</div>
                   ) : (
                     <>
-                      <div className="font-semibold text-white">{formatNaira(holding.averagePrice / 100)}</div>
+                      <div className="font-semibold text-white">{formatAmount(holding.averagePrice / 100)}</div>
                       <div className="text-xs text-gray-400">per unit</div>
                     </>
                   )}
@@ -169,7 +162,7 @@ export default function PortfolioTable({ holdings, watchlistIds, onWatchlistTogg
                   ) : (
                     <>
                       <div className={`font-semibold ${totalYield >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {totalYield >= 0 ? '+' : ''}{formatNaira(totalYield)}
+                        {totalYield >= 0 ? '+' : ''}{formatAmount(totalYield)}
                       </div>
                       <div className={`text-xs ${yieldPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {yieldPercent >= 0 ? '+' : ''}{yieldPercent < 1 && yieldPercent > 0 ? yieldPercent.toFixed(2) : Math.round(yieldPercent)}%

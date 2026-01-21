@@ -5,6 +5,9 @@ import { useSession } from "next-auth/react";
 import React, { useRef, useState, useEffect } from "react";
 import ToggleSwitch from "./ToggleSwitch";
 import { useCurrency } from "@/hooks/useCurrency";
+import NotificationSettings from "@/components/account/NotificationSettings";
+import PriceAlertSettings from "@/components/account/PriceAlertSettings";
+import ComplianceSection from "@/components/account/ComplianceSection";
 
 const AccountContainer = () => {
   const { data: session, update: updateSession } = useSession();
@@ -32,6 +35,7 @@ const AccountContainer = () => {
   const [autoLock, setAutoLock] = useState(false);
   const [priceAlerts, setPriceAlerts] = useState(false);
   const [hideBalances, setHideBalances] = useState(false);
+  const [notificationPreferences, setNotificationPreferences] = useState<any>(null);
 
   // Load user settings
   useEffect(() => {
@@ -47,9 +51,13 @@ const AccountContainer = () => {
           
           // Load notification preferences
           const notifPrefs = settings.notificationPreferences as any;
-          if (notifPrefs?.webApp) {
-            setPushNotifications(notifPrefs.webApp.transactions);
-            setPriceAlerts(notifPrefs.webApp.priceAlerts);
+          if (notifPrefs) {
+            setNotificationPreferences(notifPrefs);
+            // Keep backward compatibility with existing toggles
+            if (notifPrefs?.webApp) {
+              setPushNotifications(notifPrefs.webApp.transactions);
+              setPriceAlerts(notifPrefs.webApp.priceAlerts);
+            }
           }
         }
       } catch (error) {
@@ -350,6 +358,17 @@ const AccountContainer = () => {
                     </div>
                 </div> */}
 
+        {/* Notification Settings */}
+        {notificationPreferences && (
+          <NotificationSettings
+            initialPreferences={notificationPreferences}
+            onPreferencesChange={setNotificationPreferences}
+          />
+        )}
+
+        {/* Price Alert Settings */}
+        <PriceAlertSettings />
+
         {/* Wallet Settings */}
         <div className="bg-[#0A0A0A] border border-[#262626] rounded-lg p-6">
           <div className="mb-6">
@@ -361,33 +380,12 @@ const AccountContainer = () => {
           <div className="divide-y divide-[#23262F]">
             <div className="flex items-center justify-between py-4">
               <div>
-                <div className="text-white">Push Notifications</div>
-                <div className="text-gray-400 text-xs">
-                  Receive transaction alerts
-                </div>
-              </div>
-              <ToggleSwitch
-                checked={pushNotifications}
-                onChange={setPushNotifications}
-              />
-            </div>
-            <div className="flex items-center justify-between py-4">
-              <div>
                 <div className="text-white">Auto-Lock Wallet</div>
                 <div className="text-gray-400 text-xs">
                   Automatically lock yield after token purchase
                 </div>
               </div>
               <ToggleSwitch checked={autoLock} onChange={handleAutoLockChange} />
-            </div>
-            <div className="flex items-center justify-between py-4">
-              <div>
-                <div className="text-white">Price Alerts</div>
-                <div className="text-gray-400 text-xs">
-                  Notify when token prices change significantly
-                </div>
-              </div>
-              <ToggleSwitch checked={priceAlerts} onChange={setPriceAlerts} />
             </div>
             <div className="flex items-center justify-between py-4">
               <div>
@@ -473,6 +471,9 @@ const AccountContainer = () => {
             )}
           </div>
         </div>
+
+        {/* Compliance Section */}
+        <ComplianceSection />
       </div>
     </div>
   );

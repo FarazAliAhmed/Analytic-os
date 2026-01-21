@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import WatchlistButton from "@/components/watchlist/WatchlistButton";
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface GainerRowProps {
     logo: string;
@@ -38,6 +39,7 @@ export default function GainerRow({
 }: GainerRowProps) {
     const router = useRouter();
     const [isInWatchlist, setIsInWatchlist] = useState(initialIsInWatchlist);
+    const { formatAmount } = useCurrency();
 
     // Update local state when prop changes
     useEffect(() => {
@@ -88,7 +90,7 @@ export default function GainerRow({
                 </div>
             </td>
             <td className="py-3 px-4">
-                <div className="font-semibold">₦{Math.round(price).toLocaleString('en-NG')}</div>
+                <div className="font-semibold">{formatAmount(price)}</div>
                 <div className="text-xs text-green-400">{change > 0 ? '+' : ''}{change}%</div>
             </td>
             <td className="py-3 px-4">{industry}</td>
