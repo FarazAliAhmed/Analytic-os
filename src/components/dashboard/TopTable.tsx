@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import GainerRow from './GainerRow';
-import { useCurrency } from '@/hooks/useCurrency';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface Token {
   id: string;

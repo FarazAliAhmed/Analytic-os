@@ -4,7 +4,7 @@ import { Camera, Save, RefreshCw } from "lucide-react";
 import { useSession } from "next-auth/react";
 import React, { useRef, useState, useEffect } from "react";
 import ToggleSwitch from "./ToggleSwitch";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useCurrency } from '@/contexts/CurrencyContext';
 import NotificationSettings from "@/components/account/NotificationSettings";
 import PriceAlertSettings from "@/components/account/PriceAlertSettings";
 import ComplianceSection from "@/components/account/ComplianceSection";
@@ -28,7 +28,7 @@ const AccountContainer = () => {
   });
 
   // Currency hook
-  const { currency, exchangeRate, loading: currencyLoading, setCurrency } = useCurrency('NGN');
+  const { currency, exchangeRate, loading: currencyLoading, setCurrency } = useCurrency();
 
   // Settings state
   const [pushNotifications, setPushNotifications] = useState(false);
@@ -111,8 +111,9 @@ const AccountContainer = () => {
   const handleCurrencyChange = async (newCurrency: 'NGN' | 'USD') => {
     console.log('Currency change requested:', newCurrency);
     
-    // Optimistically update the UI first
+    // Update global context and localStorage immediately
     setCurrency(newCurrency);
+    localStorage.setItem('currencyPreference', newCurrency);
     
     try {
       // Try the main API first
@@ -140,22 +141,14 @@ const AccountContainer = () => {
         console.log('API response data:', responseData);
         setMessage(`Currency changed to ${newCurrency}`);
         setTimeout(() => setMessage(''), 3000);
-        
-        // Store in localStorage as backup
-        localStorage.setItem('currencyPreference', newCurrency);
       } else {
         const errorData = await res.json();
         console.error('API error:', errorData);
-        
-        // Use localStorage fallback
-        localStorage.setItem('currencyPreference', newCurrency);
         setMessage(`Currency changed to ${newCurrency} (saved locally)`);
         setTimeout(() => setMessage(''), 3000);
       }
     } catch (error) {
       console.error('Failed to update currency:', error);
-      // Use localStorage fallback on network error
-      localStorage.setItem('currencyPreference', newCurrency);
       setMessage(`Currency changed to ${newCurrency} (saved locally)`);
       setTimeout(() => setMessage(''), 3000);
     }

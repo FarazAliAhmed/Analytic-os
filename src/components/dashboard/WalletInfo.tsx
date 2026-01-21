@@ -3,7 +3,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface WalletInfoProps {
   balance: number // in kobo

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { FaChartLine, FaRegCalendarAlt } from 'react-icons/fa'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface PortfolioData {
     totalInvested: number

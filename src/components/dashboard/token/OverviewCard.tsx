@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiInfo, FiChevronDown } from 'react-icons/fi';
 import { formatCurrency, formatLargeNumber, getFullValue } from '@/lib/utils/formatNumber';
-import { useCurrency } from '@/hooks/useCurrency';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface OverviewCardProps {
   walletBalance?: number;

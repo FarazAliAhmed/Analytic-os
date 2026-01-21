@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+'use client'
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 interface ExchangeRateData {
   rate: number
@@ -6,7 +8,7 @@ interface ExchangeRateData {
   displayRate: string
 }
 
-interface UseCurrencyReturn {
+interface CurrencyContextType {
   currency: 'NGN' | 'USD'
   exchangeRate: ExchangeRateData | null
   loading: boolean
@@ -16,17 +18,27 @@ interface UseCurrencyReturn {
   formatAmount: (amount: number) => string
 }
 
-/**
- * Hook for managing currency preferences and conversions
- * @param defaultCurrency - Default currency preference
- */
-export function useCurrency(defaultCurrency: 'NGN' | 'USD' = 'NGN'): UseCurrencyReturn {
-  const [currency, setCurrency] = useState<'NGN' | 'USD'>(defaultCurrency)
+const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined)
+
+interface CurrencyProviderProps {
+  children: ReactNode
+}
+
+export function CurrencyProvider({ children }: CurrencyProviderProps) {
+  const [currency, setCurrency] = useState<'NGN' | 'USD'>('NGN')
   const [exchangeRate, setExchangeRate] = useState<ExchangeRateData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch exchange rate on mount and when currency changes
+  // Load currency preference from localStorage on mount
+  useEffect(() => {
+    const savedCurrency = localStorage.getItem('currencyPreference') as 'NGN' | 'USD'
+    if (savedCurrency && ['NGN', 'USD'].includes(savedCurrency)) {
+      setCurrency(savedCurrency)
+    }
+  }, [])
+
+  // Fetch exchange rate when currency changes to USD
   useEffect(() => {
     const fetchExchangeRate = async () => {
       if (currency === 'NGN') {
@@ -91,7 +103,7 @@ export function useCurrency(defaultCurrency: 'NGN' | 'USD' = 'NGN'): UseCurrency
     })}`
   }
 
-  return {
+  const value: CurrencyContextType = {
     currency,
     exchangeRate,
     loading,
@@ -100,4 +112,18 @@ export function useCurrency(defaultCurrency: 'NGN' | 'USD' = 'NGN'): UseCurrency
     convertAmount,
     formatAmount
   }
+
+  return (
+    <CurrencyContext.Provider value={value}>
+      {children}
+    </CurrencyContext.Provider>
+  )
+}
+
+export function useCurrency(): CurrencyContextType {
+  const context = useContext(CurrencyContext)
+  if (context === undefined) {
+    throw new Error('useCurrency must be used within a CurrencyProvider')
+  }
+  return context
 }

@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import WatchlistButton from '@/components/watchlist/WatchlistButton'
 import { calculateAccumulatedYield, calculateTotalYield } from '@/lib/yield-calculator'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface HoldingsToken {
   id: string

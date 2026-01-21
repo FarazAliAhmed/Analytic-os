@@ -5,6 +5,7 @@ import "./globals.css";
 import NextTopLoader from 'nextjs-toploader';
 import AuthProvider from '@/components/providers/AuthProvider';
 import { ZendeskProvider } from '@/components/providers/ZendeskProvider';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import {
   QueryClientProvider,
   QueryClient,
@@ -35,10 +36,12 @@ export default function RootLayout({
       >
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <ZendeskProvider>
-              <NextTopLoader color="#4459FF" showSpinner={false} />
-              {children}
-            </ZendeskProvider>
+            <CurrencyProvider>
+              <ZendeskProvider>
+                <NextTopLoader color="#4459FF" showSpinner={false} />
+                {children}
+              </ZendeskProvider>
+            </CurrencyProvider>
           </AuthProvider>
         </QueryClientProvider>
       </body>
