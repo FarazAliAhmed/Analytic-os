@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 /**
@@ -9,7 +8,10 @@ import { prisma } from '@/lib/prisma'
  */
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    console.log('Currency API called');
+    
+    const session = await auth()
+    console.log('Session:', session?.user?.id ? 'Found' : 'Not found');
 
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -20,12 +22,26 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json()
     const { currency } = body
+    console.log('Requested currency:', currency);
 
     // Validate currency
     if (!currency || !['NGN', 'USD'].includes(currency)) {
       return NextResponse.json(
         { success: false, error: 'Invalid currency. Must be NGN or USD' },
         { status: 400 }
+      )
+    }
+
+    // Check if UserSettings table exists by trying to find first
+    try {
+      await prisma.userSettings.findFirst({
+        where: { userId: session.user.id }
+      });
+    } catch (tableError) {
+      console.error('UserSettings table might not exist:', tableError);
+      return NextResponse.json(
+        { success: false, error: 'Database not ready. Please try again later.' },
+        { status: 503 }
       )
     }
 
@@ -67,6 +83,7 @@ export async function PUT(request: NextRequest) {
       }
     })
 
+    console.log('Settings updated successfully');
     return NextResponse.json({
       success: true,
       message: 'Currency preference updated',
@@ -75,7 +92,11 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Update currency preference error:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to update currency preference' },
+      { 
+        success: false, 
+        error: 'Failed to update currency preference',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

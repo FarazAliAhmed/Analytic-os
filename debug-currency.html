@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Currency API Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        button { padding: 10px 20px; margin: 10px; background: #4459FF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #3448EE; }
+        .result { background: #2a2a2a; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ff4444; }
+        .success { background: #44ff44; color: black; }
+    </style>
+</head>
+<body>
+    <h1>Currency API Debug Tool</h1>
+    
+    <div>
+        <button onclick="testExchangeRate()">Test Exchange Rate API</button>
+        <button onclick="testCurrencyChange('NGN')">Test Change to NGN</button>
+        <button onclick="testCurrencyChange('USD')">Test Change to USD</button>
+        <button onclick="testGetSettings()">Test Get Settings</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testExchangeRate() {
+            log('Testing exchange rate API...');
+            try {
+                const response = await fetch('/api/currency/exchange-rate');
+                const data = await response.json();
+                log(`Exchange Rate Response: ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log(`Exchange Rate Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCurrencyChange(currency) {
+            log(`Testing currency change to ${currency}...`);
+            try {
+                const response = await fetch('/api/settings/currency', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currency })
+                });
+                const data = await response.json();
+                log(`Currency Change Response (${currency}): ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log(`Currency Change Error (${currency}): ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetSettings() {
+            log('Testing get settings API...');
+            try {
+                const response = await fetch('/api/settings');
+                const data = await response.json();
+                log(`Settings Response: ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log(`Settings Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-test on load
+        window.onload = function() {
+            log('Debug tool loaded. Click buttons to test APIs.');
+        };
+    </script>
+</body>
+</html>

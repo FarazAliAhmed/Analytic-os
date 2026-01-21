@@ -202,7 +202,7 @@ export async function notifyTokenUpdate(
   const messages = {
     price: `Price changed from ₦${Number(oldValue).toLocaleString()} to ₦${Number(newValue).toLocaleString()}`,
     yield: `Annual yield changed from ${oldValue}% to ${newValue}%`,
-    status: newValue === true || newValue === 'active'
+    status: (typeof newValue === 'boolean' && newValue) || newValue === 'active' || newValue === 1
       ? 'Token is now active and available for trading'
       : 'Token has been deactivated and is no longer available'
   }

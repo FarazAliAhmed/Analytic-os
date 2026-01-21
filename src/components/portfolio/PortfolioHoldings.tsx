@@ -84,6 +84,7 @@ export default function PortfolioHoldings() {
       totalInvested: 0, // Watchlist items don't have investment
       accumulatedYield: 0, // Watchlist items don't have yield
       lastYieldUpdate: new Date(), // Current date for watchlist items
+      tokenSharePercent: 0, // Watchlist items don't have share percentage
       token: {
         id: item.token.id,
         name: item.token.name,
@@ -96,9 +97,15 @@ export default function PortfolioHoldings() {
       }
     }))
 
+  // Add tokenSharePercent to holdings (for now, set to 0 as placeholder)
+  const holdingsWithSharePercent = holdings.map(holding => ({
+    ...holding,
+    tokenSharePercent: 0 // TODO: Calculate actual share percentage
+  }))
+
   // Filter holdings based on view
   const displayedHoldings = view === 'all'
-    ? holdings
+    ? holdingsWithSharePercent
     : watchlistAsHoldings
 
   const allTokensCount = holdings.length

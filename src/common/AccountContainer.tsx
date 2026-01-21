@@ -59,9 +59,21 @@ const AccountContainer = () => {
               setPriceAlerts(notifPrefs.webApp.priceAlerts);
             }
           }
+        } else {
+          console.error('Failed to load settings from API:', data.error);
+          // Fallback to localStorage
+          const savedCurrency = localStorage.getItem('currencyPreference') as 'NGN' | 'USD';
+          if (savedCurrency && ['NGN', 'USD'].includes(savedCurrency)) {
+            setCurrency(savedCurrency);
+          }
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
+        // Fallback to localStorage
+        const savedCurrency = localStorage.getItem('currencyPreference') as 'NGN' | 'USD';
+        if (savedCurrency && ['NGN', 'USD'].includes(savedCurrency)) {
+          setCurrency(savedCurrency);
+        }
       } finally {
         setSettingsLoading(false);
       }
@@ -97,20 +109,55 @@ const AccountContainer = () => {
   };
 
   const handleCurrencyChange = async (newCurrency: 'NGN' | 'USD') => {
+    console.log('Currency change requested:', newCurrency);
+    
+    // Optimistically update the UI first
+    setCurrency(newCurrency);
+    
     try {
-      const res = await fetch('/api/settings/currency', {
+      // Try the main API first
+      let res = await fetch('/api/settings/currency', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currency: newCurrency })
       });
 
+      console.log('Main API response status:', res.status);
+      
+      // If main API fails, try the simple fallback
+      if (!res.ok && res.status === 500) {
+        console.log('Main API failed, trying simple API...');
+        res = await fetch('/api/settings/currency-simple', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ currency: newCurrency })
+        });
+        console.log('Simple API response status:', res.status);
+      }
+      
       if (res.ok) {
-        setCurrency(newCurrency);
+        const responseData = await res.json();
+        console.log('API response data:', responseData);
         setMessage(`Currency changed to ${newCurrency}`);
+        setTimeout(() => setMessage(''), 3000);
+        
+        // Store in localStorage as backup
+        localStorage.setItem('currencyPreference', newCurrency);
+      } else {
+        const errorData = await res.json();
+        console.error('API error:', errorData);
+        
+        // Use localStorage fallback
+        localStorage.setItem('currencyPreference', newCurrency);
+        setMessage(`Currency changed to ${newCurrency} (saved locally)`);
         setTimeout(() => setMessage(''), 3000);
       }
     } catch (error) {
       console.error('Failed to update currency:', error);
+      // Use localStorage fallback on network error
+      localStorage.setItem('currencyPreference', newCurrency);
+      setMessage(`Currency changed to ${newCurrency} (saved locally)`);
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
