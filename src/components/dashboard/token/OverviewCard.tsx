@@ -186,7 +186,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
     }
   };
 
-  const getCurrencySymbol = () => currency === 'NGN' ? '₦' : '$';$';
+  const getCurrencySymbol = () => currency === 'NGN' ? '₦' : '$';
   const getCurrencyLabel = () => currency === 'NGN' ? 'Naira' : 'USDT';
 
   const getEstimatedValue = () => {
