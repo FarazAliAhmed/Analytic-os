@@ -71,6 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.username,
+          userId: user.userId,
           username: user.username,
           firstName: user.firstName,
           lastName: user.lastName,
@@ -229,6 +230,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 // Export authOptions for API routes (NextAuth v5 format)
 interface JWTPayload {
   id?: string
+  userId?: string | null
   firstName?: string | null
   lastName?: string | null
   walletAddress?: string | null
@@ -238,6 +240,7 @@ interface UserPayload {
   id: string
   email: string
   name: string
+  userId?: string | null
   username?: string | null
   firstName?: string | null
   lastName?: string | null
@@ -290,6 +293,7 @@ export const authOptions = {
           id: user.id,
           email: user.email,
           name: user.username || user.email.split('@')[0],
+          userId: user.userId,
           firstName: user.firstName,
           lastName: user.lastName,
           walletAddress: user.walletAddress,
@@ -309,6 +313,7 @@ export const authOptions = {
     async jwt({ token, user }: { token: JWTPayload; user?: UserPayload }) {
       if (user) {
         token.id = user.id
+        token.userId = user.userId
         token.firstName = user.firstName
         token.lastName = user.lastName
         token.walletAddress = user.walletAddress
@@ -318,6 +323,7 @@ export const authOptions = {
     async session({ session, token }: { session: any; token: JWTPayload }) {
       if (token && session.user) {
         session.user.id = token.id as string
+        session.user.userId = token.userId as string | null
         session.user.firstName = token.firstName as string | null
         session.user.lastName = token.lastName as string | null
         session.user.walletAddress = token.walletAddress as string | null
