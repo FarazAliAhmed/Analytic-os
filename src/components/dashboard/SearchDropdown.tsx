@@ -1,4 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSearch, SearchResult } from '@/hooks/useSearch'
 import { Search, X, Clock, TrendingUp } from 'lucide-react'
 
@@ -8,6 +9,7 @@ interface SearchDropdownProps {
 }
 
 const SearchDropdown = forwardRef<HTMLDivElement, SearchDropdownProps>(({ isOpen, onClose }, ref) => {
+  const router = useRouter()
   const {
     query,
     setQuery,
@@ -60,8 +62,8 @@ const SearchDropdown = forwardRef<HTMLDivElement, SearchDropdownProps>(({ isOpen
   }
 
   const handleResultClick = (result: SearchResult) => {
-    // Navigate to result detail page
-    console.log('Navigate to:', result.symbol)
+    // Navigate to token detail page
+    router.push(`/dashboard/token?symbol=${result.symbol}`)
     onClose()
   }
 

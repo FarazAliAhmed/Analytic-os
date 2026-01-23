@@ -93,6 +93,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.id = user.id
+        token.userId = (user as any).userId
         token.username = (user as any).username
         token.firstName = (user as any).firstName
         token.lastName = (user as any).lastName
@@ -130,6 +131,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string
+        session.user.userId = token.userId as string | null
         session.user.name = token.username as string
         session.user.username = token.username as string | null
         session.user.firstName = token.firstName as string | null
