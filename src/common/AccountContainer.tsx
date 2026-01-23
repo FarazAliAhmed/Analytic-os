@@ -342,6 +342,19 @@ const AccountContainer = () => {
 
               <div>
                 <label className="block text-sm text-gray-400 mb-1">
+                  User ID
+                </label>
+                <input
+                  type="text"
+                  value={user?.userId || ''}
+                  disabled
+                  className="w-full bg-[#1A1A1A] border border-[#23262F] rounded-lg px-4 py-2.5 text-gray-500 cursor-not-allowed opacity-60 font-mono"
+                />
+                <p className="text-xs text-gray-500 mt-1">Your unique user identifier</p>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
                   Email
                 </label>
                 <input

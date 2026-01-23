@@ -1,19 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-
-// Mock data for search results (replace with database query when startup model exists)
-const MOCK_STARTUPS = [
-  { id: '1', name: 'PayStack Tech Ltd', symbol: 'PYSK', industry: 'Software', price: 0.0054, change: 6.82, marketCap: 500000, annualYield: 12.5 },
-  { id: '2', name: 'Whisper Inc.', symbol: 'WISP', industry: 'EdTech', price: 1.81, change: 5.71, marketCap: 1200000, annualYield: 8.3 },
-  { id: '3', name: 'Edurex Service Inc.', symbol: 'EDRX', industry: 'Fintech', price: 0.13, change: 4.63, marketCap: 800000, annualYield: 15.2 },
-  { id: '4', name: 'Hynet Tech Ltd', symbol: 'HYNET', industry: 'Software', price: 0.64, change: 3.24, marketCap: 450000, annualYield: 10.8 },
-  { id: '5', name: 'Cerebral IO', symbol: 'IO', industry: 'AI', price: 0.0041, change: -0.52, marketCap: 200000, annualYield: 22.5 },
-  { id: '6', name: 'Tesla Corp', symbol: 'WEETH', industry: 'Automotive', price: 1950.63, change: -0.01, marketCap: 500000000, annualYield: 5.2 },
-  { id: '7', name: 'Balancer', symbol: 'BAL', industry: 'DeFi', price: 1.05, change: -3.69, marketCap: 350000, annualYield: 18.7 },
-  { id: '8', name: 'Mantoformin', symbol: 'XAUT', industry: 'Crypto', price: 3274.71, change: 1.03, marketCap: 800000000, annualYield: 4.1 },
-  { id: '9', name: 'ChainLink', symbol: 'LINK', industry: 'DeFi', price: 24.50, change: 2.15, marketCap: 1500000000, annualYield: 8.5 },
-  { id: '10', name: 'Uniswap', symbol: 'UNI', industry: 'DeFi', price: 8.75, change: -1.2, marketCap: 650000000, annualYield: 12.3 },
-]
+import { prisma } from '@/lib/prisma'
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -36,10 +23,11 @@ interface SearchResult {
   change: number
   marketCap: number
   annualYield: number
+  logoUrl: string | null
 }
 
 /**
- * GET /api/search - Search startups/companies
+ * GET /api/search - Search tokens/companies
  */
 export async function GET(request: NextRequest) {
   try {
@@ -58,62 +46,71 @@ export async function GET(request: NextRequest) {
 
     const data = searchSchema.parse(params)
 
-    // Filter mock data (replace with database query)
-    let results = [...MOCK_STARTUPS]
+    // Build where clause for Prisma query
+    const where: any = {
+      isActive: true, // Only search active tokens
+    }
 
-    // Text search
+    // Text search - search in name, symbol, and industry
     if (data.q && data.q.trim()) {
       const query = data.q.toLowerCase().trim()
-      results = results.filter(
-        (item) =>
-          item.name.toLowerCase().includes(query) ||
-          item.symbol.toLowerCase().includes(query) ||
-          item.industry.toLowerCase().includes(query)
-      )
+      where.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { symbol: { contains: query, mode: 'insensitive' } },
+        { industry: { contains: query, mode: 'insensitive' } },
+      ]
     }
 
     // Industry filter
     if (data.industry) {
-      results = results.filter((item) => item.industry === data.industry)
+      where.industry = data.industry
     }
 
-    // Price range filter
+    // Price range filter (price is stored in kobo, so multiply by 100)
     if (data.minPrice !== undefined) {
-      results = results.filter((item) => item.price >= data.minPrice!)
+      where.price = { ...where.price, gte: Math.round(data.minPrice * 100) }
     }
     if (data.maxPrice !== undefined) {
-      results = results.filter((item) => item.price <= data.maxPrice!)
+      where.price = { ...where.price, lte: Math.round(data.maxPrice * 100) }
     }
 
-    // Market cap filter
+    // Volume filter (using volume as market cap proxy)
     if (data.minMarketCap !== undefined) {
-      results = results.filter((item) => item.marketCap >= data.minMarketCap!)
+      where.volume = { ...where.volume, gte: data.minMarketCap }
     }
     if (data.maxMarketCap !== undefined) {
-      results = results.filter((item) => item.marketCap <= data.maxMarketCap!)
+      where.volume = { ...where.volume, lte: data.maxMarketCap }
     }
 
     // Yield filter
     if (data.minYield !== undefined) {
-      results = results.filter((item) => item.annualYield >= data.minYield!)
+      where.annualYield = { ...where.annualYield, gte: data.minYield }
     }
     if (data.maxYield !== undefined) {
-      results = results.filter((item) => item.annualYield <= data.maxYield!)
+      where.annualYield = { ...where.annualYield, lte: data.maxYield }
     }
 
-    // Limit results
-    results = results.slice(0, data.limit)
+    // Query database
+    const tokens = await prisma.token.findMany({
+      where,
+      take: data.limit,
+      orderBy: [
+        { volume: 'desc' }, // Sort by volume (most traded first)
+        { name: 'asc' }
+      ]
+    })
 
     // Format results
-    const formattedResults: SearchResult[] = results.map((item) => ({
-      id: item.id,
-      name: item.name,
-      symbol: item.symbol,
-      industry: item.industry,
-      price: item.price,
-      change: item.change,
-      marketCap: item.marketCap,
-      annualYield: item.annualYield,
+    const formattedResults: SearchResult[] = tokens.map((token) => ({
+      id: token.id,
+      name: token.name,
+      symbol: token.symbol,
+      industry: token.industry,
+      price: token.price / 100, // Convert from kobo to naira
+      change: parseFloat(token.priceChange24h.toString()),
+      marketCap: token.volume, // Using volume as market cap
+      annualYield: parseFloat(token.annualYield.toString()),
+      logoUrl: token.logoUrl
     }))
 
     return NextResponse.json({

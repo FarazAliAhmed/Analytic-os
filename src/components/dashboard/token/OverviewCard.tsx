@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiInfo, FiChevronDown } from 'react-icons/fi';
-import { formatCurrency, formatLargeNumber, getFullValue } from '@/lib/utils/formatNumber';
+import { formatCurrency } from '@/lib/utils/formatNumber';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface OverviewCardProps {
@@ -186,7 +186,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
     }
   };
 
-  const getCurrencySymbol = () => currency === 'NGN' ? '₦' : '$';
+  const getCurrencySymbol = () => currency === 'NGN' ? '₦' : '$';$';
   const getCurrencyLabel = () => currency === 'NGN' ? 'Naira' : 'USDT';
 
   const getEstimatedValue = () => {
