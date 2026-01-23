@@ -144,9 +144,46 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session
     },
-    async signIn({ user, account }) {
-      // Allow OAuth sign-in
+    async signIn({ user, account, profile }) {
+      // Handle OAuth sign-in
       if (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter') {
+        try {
+          // Check if user exists in database
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            include: { wallet: true }
+          })
+
+          // If user exists but has no wallet, create one
+          if (existingUser && !existingUser.wallet) {
+            console.log('Creating wallet for existing OAuth user:', existingUser.email)
+            try {
+              const { createReservedAccount } = await import('@/lib/monnify')
+              const monnifyAccount = await createReservedAccount({
+                email: existingUser.email,
+                firstName: existingUser.firstName || 'User',
+                lastName: existingUser.lastName || 'User',
+                reference: `WALLET_${existingUser.id}_${Date.now()}`
+              })
+
+              await prisma.wallet.create({
+                data: {
+                  userId: existingUser.id,
+                  accountNumber: monnifyAccount.accountNumber,
+                  bankName: monnifyAccount.bankName,
+                  accountName: monnifyAccount.accountName,
+                  accountRef: monnifyAccount.accountReference,
+                  balance: 0
+                }
+              })
+              console.log('Wallet created successfully for:', existingUser.email)
+            } catch (walletError) {
+              console.error('Failed to create wallet for existing OAuth user:', walletError)
+            }
+          }
+        } catch (error) {
+          console.error('Error in signIn callback:', error)
+        }
         return true
       }
       // Credentials handled separately
@@ -161,6 +198,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Handle new OAuth users - create database records
       if (isNewUser && (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter')) {
         try {
+          console.log('Creating new OAuth user:', user.email)
+          
           // Generate username from email or name
           const username = user.email?.split('@')[0] || `user_${Date.now()}`
           const uniqueUsername = `${username}_${Math.random().toString(36).substring(2, 6)}`
@@ -179,6 +218,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           })
 
+          console.log('User created in database:', dbUser.id)
+
           // Create account record
           await prisma.account.create({
             data: {
@@ -195,8 +236,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           })
 
+          console.log('Account record created')
+
           // Create wallet automatically for OAuth users
           try {
+            console.log('Creating Monnify wallet for:', user.email)
             const { createReservedAccount } = await import('@/lib/monnify')
             const monnifyAccount = await createReservedAccount({
               email: user.email!,
@@ -204,6 +248,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               lastName: nameParts.slice(1).join(' ') || nameParts[0],
               reference: `WALLET_${dbUser.id}_${Date.now()}`
             })
+
+            console.log('Monnify account created:', monnifyAccount.accountNumber)
 
             await prisma.wallet.create({
               data: {
@@ -215,11 +261,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 balance: 0
               }
             })
+            
+            console.log('Wallet created successfully in database')
           } catch (walletError) {
             console.error('Failed to create wallet for OAuth user:', walletError)
+            // Log more details about the error
+            if (walletError instanceof Error) {
+              console.error('Wallet error details:', walletError.message)
+              console.error('Wallet error stack:', walletError.stack)
+            }
           }
         } catch (error) {
           console.error('Failed to create OAuth user records:', error)
+          if (error instanceof Error) {
+            console.error('Error details:', error.message)
+            console.error('Error stack:', error.stack)
+          }
         }
       }
     },
