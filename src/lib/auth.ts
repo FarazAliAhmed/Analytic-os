@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth'
+import { PrismaAdapter } from '@auth/prisma-adapter'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import Facebook from 'next-auth/providers/facebook'
@@ -8,6 +9,7 @@ import { verifyPassword } from '@/lib/auth/password'
 import { generateUserId } from '@/lib/user-id'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -104,6 +106,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.image = (user as any).image
       }
       
+      // For OAuth users, fetch fresh data from database
+      if (token.id && account?.provider && (account.provider === 'google' || account.provider === 'facebook' || account.provider === 'twitter')) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: {
+              userId: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              walletAddress: true,
+              role: true,
+              image: true,
+            }
+          })
+          
+          if (dbUser) {
+            token.userId = dbUser.userId
+            token.username = dbUser.username
+            token.firstName = dbUser.firstName
+            token.lastName = dbUser.lastName
+            token.phone = dbUser.phone
+            token.walletAddress = dbUser.walletAddress
+            token.role = dbUser.role
+            token.image = dbUser.image
+          }
+        } catch (error) {
+          console.error('Failed to fetch user data for JWT:', error)
+        }
+      }
+      
       // Handle session update trigger (when updateSession is called)
       if (trigger === 'update' && session) {
         token.username = session.user?.name || token.username
@@ -123,6 +157,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = dbUser.role
         }
       }
+      
       // Update image from OAuth provider
       if (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter') {
         token.provider = account.provider
@@ -192,91 +227,77 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   events: {
     async createUser({ user }) {
-      // Welcome email on new registration
-    },
-    async signIn({ user, account, isNewUser }) {
-      // Handle new OAuth users - create database records
-      if (isNewUser && (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter')) {
+      // This event fires when NextAuth creates a new user via the adapter
+      // Add userId and username if they don't exist
+      if (user.id) {
         try {
-          console.log('Creating new OAuth user:', user.email)
-          
-          // Generate username from email or name
-          const username = user.email?.split('@')[0] || `user_${Date.now()}`
-          const uniqueUsername = `${username}_${Math.random().toString(36).substring(2, 6)}`
-
-          // Create user in database
-          const nameParts = (user.name || 'User').split(' ')
-          const dbUser = await prisma.user.create({
-            data: {
-              email: user.email!,
-              username: uniqueUsername,
-              userId: generateUserId(),
-              firstName: nameParts[0],
-              lastName: nameParts.slice(1).join(' ') || nameParts[0],
-              image: user.image,
-              emailVerified: new Date(),
-            }
+          const existingUser = await prisma.user.findUnique({
+            where: { id: user.id }
           })
 
-          console.log('User created in database:', dbUser.id)
+          if (existingUser && !existingUser.userId) {
+            // Generate username from email or name
+            const username = user.email?.split('@')[0] || `user_${Date.now()}`
+            const uniqueUsername = `${username}_${Math.random().toString(36).substring(2, 6)}`
 
-          // Create account record
-          await prisma.account.create({
-            data: {
-              userId: dbUser.id,
-              type: 'oauth',
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-              access_token: account.access_token,
-              refresh_token: account.refresh_token,
-              expires_at: account.expires_at,
-              token_type: account.token_type,
-              id_token: account.id_token,
-              scope: account.scope,
-            }
-          })
-
-          console.log('Account record created')
-
-          // Create wallet automatically for OAuth users
-          try {
-            console.log('Creating Monnify wallet for:', user.email)
-            const { createReservedAccount } = await import('@/lib/monnify')
-            const monnifyAccount = await createReservedAccount({
-              email: user.email!,
-              firstName: nameParts[0],
-              lastName: nameParts.slice(1).join(' ') || nameParts[0],
-              reference: `WALLET_${dbUser.id}_${Date.now()}`
-            })
-
-            console.log('Monnify account created:', monnifyAccount.accountNumber)
-
-            await prisma.wallet.create({
+            // Update user with userId and username
+            await prisma.user.update({
+              where: { id: user.id },
               data: {
-                userId: dbUser.id,
-                accountNumber: monnifyAccount.accountNumber,
-                bankName: monnifyAccount.bankName,
-                accountName: monnifyAccount.accountName,
-                accountRef: monnifyAccount.accountReference,
-                balance: 0
+                userId: generateUserId(),
+                username: uniqueUsername,
               }
             })
+            console.log('Updated OAuth user with userId and username:', user.email)
+          }
+        } catch (error) {
+          console.error('Failed to update OAuth user:', error)
+        }
+      }
+    },
+    async signIn({ user, account, isNewUser }) {
+      // Handle wallet creation for OAuth users
+      if (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter') {
+        try {
+          // Check if user has a wallet
+          const existingUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            include: { wallet: true }
+          })
+
+          if (existingUser && !existingUser.wallet) {
+            console.log('Creating wallet for OAuth user:', existingUser.email)
             
-            console.log('Wallet created successfully in database')
-          } catch (walletError) {
-            console.error('Failed to create wallet for OAuth user:', walletError)
-            // Log more details about the error
-            if (walletError instanceof Error) {
-              console.error('Wallet error details:', walletError.message)
-              console.error('Wallet error stack:', walletError.stack)
+            try {
+              const { createReservedAccount } = await import('@/lib/monnify')
+              const monnifyAccount = await createReservedAccount({
+                email: existingUser.email,
+                firstName: existingUser.firstName || existingUser.name?.split(' ')[0] || 'User',
+                lastName: existingUser.lastName || existingUser.name?.split(' ').slice(1).join(' ') || 'User',
+                reference: `WALLET_${existingUser.id}_${Date.now()}`
+              })
+
+              await prisma.wallet.create({
+                data: {
+                  userId: existingUser.id,
+                  accountNumber: monnifyAccount.accountNumber,
+                  bankName: monnifyAccount.bankName,
+                  accountName: monnifyAccount.accountName,
+                  accountRef: monnifyAccount.accountReference,
+                  balance: 0
+                }
+              })
+              
+              console.log('Wallet created successfully for:', existingUser.email)
+            } catch (walletError) {
+              console.error('Failed to create wallet for OAuth user:', walletError)
+              if (walletError instanceof Error) {
+                console.error('Wallet error details:', walletError.message)
+              }
             }
           }
         } catch (error) {
-          console.error('Failed to create OAuth user records:', error)
-          if (error instanceof Error) {
-            console.error('Error details:', error.message)
-            console.error('Error stack:', error.stack)
-          }
+          console.error('Error in signIn event:', error)
         }
       }
     },

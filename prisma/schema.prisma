@@ -18,10 +18,11 @@ datasource db {
 
 model User {
   id              String    @id @default(cuid())
+  name            String?
   email           String    @unique
   emailVerified   DateTime?
-  username        String    @unique
-  userId          String    @unique  // ANALYTI-XXXXXX format
+  username        String?   @unique
+  userId          String?   @unique  // ANALYTI-XXXXXX format
   firstName       String?
   lastName        String?
   phone           String?
