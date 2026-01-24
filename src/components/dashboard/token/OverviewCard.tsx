@@ -247,11 +247,11 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           <div className="text-gray-400">Volume</div>
           <div className="relative group">
             <div className="font-semibold text-white cursor-help">
-              {tokenData ? formatCurrencyAmount(tokenData.volume) : '---'}
+              {tokenData ? formatCurrencyAmount(tokenData.volume / 100) : '---'}
             </div>
             {tokenData && (
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-gray-700">
-                {formatCurrencyAmount(tokenData.volume)}
+                {formatCurrencyAmount(tokenData.volume / 100)}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
               </div>
             )}
