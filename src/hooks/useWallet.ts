@@ -23,7 +23,7 @@ export function useWallet() {
   )
 
   const createWallet = async () => {
-    const res = await fetch('/api/wallet/create', { method: 'POST' })
+    const res = await fetch('/api/wallet/ensure', { method: 'POST' })
     if (!res.ok) throw new Error('Failed to create wallet')
     await mutateWallet()
     await mutateBalance()
