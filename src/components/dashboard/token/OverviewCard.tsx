@@ -19,6 +19,7 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(1500);
   const [tokenData, setTokenData] = useState<any>(null);
+  const [periodVolume, setPeriodVolume] = useState<number>(0);
   const [yieldPayout, setYieldPayout] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true); // Add loading state for initial data fetch
@@ -60,6 +61,13 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
         const yieldData = await yieldRes.json();
         if (yieldData.success && yieldData.yieldPayouts) {
           setYieldPayout(yieldData.yieldPayouts[tokenSymbol] || 0);
+        }
+
+        // Fetch period volume for 30d period (default)
+        const volumeRes = await fetch('/api/tokens/period-volume?period=30d');
+        const volumeData = await volumeRes.json();
+        if (volumeData.success && volumeData.volumes) {
+          setPeriodVolume(volumeData.volumes[tokenSymbol] || 0);
         }
       } catch (err) {
         console.error('Failed to fetch token data:', err);
@@ -247,11 +255,11 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ walletBalance = 0, tokenSym
           <div className="text-gray-400">Volume</div>
           <div className="relative group">
             <div className="font-semibold text-white cursor-help">
-              {tokenData ? formatCurrencyAmount(tokenData.volume / 100) : '---'}
+              {formatCurrencyAmount(periodVolume)}
             </div>
-            {tokenData && (
+            {periodVolume > 0 && (
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-gray-700">
-                {formatCurrencyAmount(tokenData.volume / 100)}
+                {formatCurrencyAmount(periodVolume)}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
               </div>
             )}
