@@ -184,14 +184,62 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter') {
         try {
           // Check if user exists in database
-          const existingUser = await prisma.user.findUnique({
+          let existingUser = await prisma.user.findUnique({
             where: { email: user.email! },
-            include: { wallet: true }
+            include: { wallet: true, accounts: true }
           })
+
+          // If user doesn't exist, create them
+          if (!existingUser) {
+            console.log('Creating new OAuth user:', user.email)
+            
+            // Generate username from email or name
+            const username = user.email?.split('@')[0] || `user_${Date.now()}`
+            const uniqueUsername = `${username}_${Math.random().toString(36).substring(2, 6)}`
+            
+            // Parse name into first and last
+            const nameParts = (user.name || 'User').split(' ')
+            const firstName = nameParts[0]
+            const lastName = nameParts.slice(1).join(' ') || nameParts[0]
+
+            // Create user in database
+            existingUser = await prisma.user.create({
+              data: {
+                email: user.email!,
+                username: uniqueUsername,
+                userId: generateUserId(),
+                firstName: firstName,
+                lastName: lastName,
+                image: user.image,
+                emailVerified: new Date(),
+              },
+              include: { wallet: true, accounts: true }
+            })
+
+            console.log('User created:', existingUser.id)
+
+            // Create OAuth account record
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: 'oauth',
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                refresh_token: account.refresh_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                id_token: account.id_token,
+                scope: account.scope,
+              }
+            })
+
+            console.log('OAuth account created')
+          }
 
           // If user exists but has no wallet, create one
           if (existingUser && !existingUser.wallet) {
-            console.log('Creating wallet for existing OAuth user:', existingUser.email)
+            console.log('Creating wallet for OAuth user:', existingUser.email)
             try {
               const { createReservedAccount } = await import('@/lib/monnify')
               const monnifyAccount = await createReservedAccount({
@@ -213,11 +261,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               })
               console.log('Wallet created successfully for:', existingUser.email)
             } catch (walletError) {
-              console.error('Failed to create wallet for existing OAuth user:', walletError)
+              console.error('Failed to create wallet for OAuth user:', walletError)
+              if (walletError instanceof Error) {
+                console.error('Wallet error details:', walletError.message)
+              }
             }
           }
         } catch (error) {
           console.error('Error in signIn callback:', error)
+          if (error instanceof Error) {
+            console.error('Error details:', error.message)
+          }
         }
         return true
       }
