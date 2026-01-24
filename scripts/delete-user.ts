@@ -1,7 +1,12 @@
 import { prisma } from '../src/lib/prisma'
 
 async function deleteUser() {
-  const emails = ['alifaraz22@gmail.com', 'chisomalaoma@gmail.com']
+  const emails = process.argv.slice(2)
+  
+  if (emails.length === 0) {
+    console.log('Usage: npx tsx scripts/delete-user.ts <email1> [email2] ...')
+    process.exit(1)
+  }
   
   for (const email of emails) {
     try {
@@ -113,7 +118,9 @@ async function deleteUser() {
     }
   }
   
-  console.log('\n✅ All users deleted. You can now test Google sign-up.')
+  if (emails.length > 0) {
+    console.log('\n✅ Done!')
+  }
   await prisma.$disconnect()
 }
 
