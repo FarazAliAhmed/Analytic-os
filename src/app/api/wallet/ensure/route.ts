@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
     console.log('[WALLET-ENSURE] Checking wallet for user:', session.user.email)
 
     // Ensure user has a wallet
-    const hasWallet = await ensureUserHasWallet(session.user.id)
+    const result = await ensureUserHasWallet(session.user.id)
 
-    if (hasWallet) {
+    if (result) {
       console.log('[WALLET-ENSURE] User has wallet:', session.user.email)
       return NextResponse.json({ 
         success: true,
@@ -30,16 +30,30 @@ export async function POST(request: NextRequest) {
       })
     } else {
       console.error('[WALLET-ENSURE] Failed to ensure wallet for:', session.user.email)
+      
+      // Get more details about the failure
+      const { prisma } = await import('@/lib/prisma')
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { email: true, firstName: true, lastName: true }
+      })
+      
       return NextResponse.json({ 
         success: false,
         hasWallet: false,
-        error: 'Failed to create wallet'
+        error: 'Failed to create wallet. Please check server logs for details.',
+        userInfo: user
       }, { status: 500 })
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('[WALLET-ENSURE] Error:', error)
+    console.error('[WALLET-ENSURE] Error stack:', error.stack)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

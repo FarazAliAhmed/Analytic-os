@@ -86,8 +86,12 @@ export default function Header({
       await createWallet()
       await mutateWallet()
       console.log('[HEADER] Wallet created successfully')
-    } catch (error) {
+    } catch (error: any) {
       console.error('[HEADER] Failed to create wallet:', error)
+      console.error('[HEADER] Error details:', error.message)
+      
+      // Show error to user
+      alert(`Failed to create wallet: ${error.message || 'Unknown error'}. Please try again or contact support.`)
     } finally {
       setIsCreating(false)
     }
