@@ -42,9 +42,18 @@ export default function Header({
   // Use NGN wallet hook
   const { balance, wallet, hasWallet, isLoading, createWallet, mutateWallet } = useWallet()
   const [isCreating, setIsCreating] = useState(false)
+  const [walletCreationAttempted, setWalletCreationAttempted] = useState(false)
 
   // Enable auto-sync for wallet polling
   useWalletSync(status === 'authenticated')
+
+  // Automatically create wallet if user doesn't have one
+  useEffect(() => {
+    if (status === 'authenticated' && !isLoading && !hasWallet && !walletCreationAttempted) {
+      setWalletCreationAttempted(true)
+      handleCreateWallet()
+    }
+  }, [status, isLoading, hasWallet, walletCreationAttempted])
 
   // Close profile menu when clicking outside
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -73,10 +82,12 @@ export default function Header({
     if (isCreating) return
     setIsCreating(true)
     try {
+      console.log('[HEADER] Creating wallet automatically...')
       await createWallet()
       await mutateWallet()
+      console.log('[HEADER] Wallet created successfully')
     } catch (error) {
-      console.error('Failed to create wallet:', error)
+      console.error('[HEADER] Failed to create wallet:', error)
     } finally {
       setIsCreating(false)
     }
@@ -140,8 +151,24 @@ export default function Header({
           {/* Wallet Info - Authenticated User */}
           {status === 'authenticated' && session?.user ? (
             <div className="flex items-center gap-2">
-              {isLoading ? (
-                <div className="w-32 h-10 bg-gray-800 rounded-xl animate-pulse" />
+              {isLoading || isCreating ? (
+                /* Loading State */
+                <div className="flex items-center gap-3 bg-[#23262F] rounded-xl px-4 py-2">
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400">Wallet Balance</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-4 bg-gray-700 rounded animate-pulse" />
+                      <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="w-px h-8 bg-[#858B9A33]" />
+                  <div className="text-xs text-gray-400">
+                    {isCreating ? 'Creating wallet...' : 'Loading...'}
+                  </div>
+                </div>
               ) : wallet ? (
                 /* NGN Wallet */
                 <WalletInfo
@@ -157,9 +184,15 @@ export default function Header({
                 <button
                   onClick={handleCreateWallet}
                   disabled={isCreating}
-                  className="px-4 py-2 bg-[#4459FF] hover:bg-[#3448EE] disabled:bg-[#4459FF]/50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+                  className="px-4 py-2 bg-[#4459FF] hover:bg-[#3448EE] disabled:bg-[#4459FF]/50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors flex items-center gap-2"
                 >
-                  {isCreating ? 'Creating...' : 'Create Wallet'}
+                  {isCreating && (
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {isCreating ? 'Creating Wallet...' : 'Create Wallet'}
                 </button>
               )}
 
