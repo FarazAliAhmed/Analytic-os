@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
+import { Eye, EyeOff } from 'lucide-react'
 
 interface SignInModalProps {
   open: boolean
@@ -19,6 +20,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInM
   const [password, setPassword] = useState('')
   const [showComingSoon, setShowComingSoon] = useState(false)
   const [comingSoonProvider, setComingSoonProvider] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   if (!open) return null
 
@@ -161,14 +163,23 @@ export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInM
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#23262F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#4459FF]"
-              placeholder="Enter your password"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#23262F] rounded-lg px-4 py-3 pr-12 text-white focus:outline-none focus:border-[#4459FF]"
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"
