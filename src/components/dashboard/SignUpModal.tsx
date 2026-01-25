@@ -82,31 +82,9 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
         return
       }
 
-      // Step 2: Auto sign-in (OTP verification disabled temporarily)
-      const signInResult = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (signInResult?.error) {
-        setError('Account created but failed to sign in. Please try signing in manually.')
-        setLoading(false)
-        return
-      }
-
-      // Success - close modal and redirect based on role
-      await updateSession()
-      onClose()
-      // Use setTimeout to allow session to update
-      setTimeout(() => {
-        if (role === 'ADMIN') {
-          router.push('/admin/dashboard')
-        } else {
-          router.push('/dashboard')
-        }
-        router.refresh()
-      }, 100)
+      // Step 2: Move to OTP verification step
+      setStep('otp')
+      setLoading(false)
     } catch (err) {
       setError('Something went wrong')
       setLoading(false)
@@ -371,7 +349,7 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
                         : 'bg-[#1A1A1A] border-[#23262F] text-gray-400 hover:border-[#4459FF]'
                     }`}
                   >
-                    <div className="font-medium">Investor</div>
+                    <div className="font-medium">Personal</div>
                     <div className="text-xs mt-1 opacity-70">Access investment features</div>
                   </button>
                   <button
@@ -383,7 +361,7 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
                         : 'bg-[#1A1A1A] border-[#23262F] text-gray-400 hover:border-[#4459FF]'
                     }`}
                   >
-                    <div className="font-medium">Admin</div>
+                    <div className="font-medium">Business</div>
                     <div className="text-xs mt-1 opacity-70">Manage platform settings</div>
                   </button>
                 </div>

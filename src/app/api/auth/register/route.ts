@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Generate unique user ID
     const userId = generateUserId()
 
-    // Create user (auto-verified - OTP disabled temporarily)
+    // Create user (email verification required via OTP)
     const user = await prisma.user.create({
       data: {
         email: data.email,
@@ -65,51 +65,30 @@ export async function POST(request: NextRequest) {
         lastName: data.lastName,
         phone: data.phone || null,
         passwordHash,
-        emailVerified: new Date(), // Auto-verify user
+        emailVerified: null, // Require OTP verification
         role: data.role || 'USER',
       },
     })
 
-    // Auto-create NGN wallet with Monnify reserved account (with retry logic)
-    let wallet = null
-    console.log(`[REGISTRATION] Creating wallet for user: ${user.email}`)
+    // Send OTP verification email
+    const { createVerificationToken } = await import('@/lib/auth/otp')
+    const { sendOTPEmail } = await import('@/lib/auth/email')
     
-    const walletResult = await createWalletWithRetry({
-      userId: user.id,
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      maxRetries: 3
-    })
+    const otp = await createVerificationToken(data.email)
+    const emailSent = await sendOTPEmail(data.email, otp)
     
-    if (walletResult.success) {
-      wallet = walletResult.wallet
-      console.log(`[REGISTRATION] Wallet created successfully for: ${user.email}`)
-    } else {
-      console.error('[REGISTRATION] Failed to create wallet:', walletResult.error)
-      // Don't fail registration if wallet creation fails
-      // Wallet can be created later
+    if (!emailSent) {
+      console.error('[REGISTRATION] Failed to send OTP email')
+      // Continue anyway - user can request new OTP
     }
-
-    // Send welcome email (don't block on email failure)
-    sendWelcomeEmail(data.email, data.firstName).catch(console.error)
 
     return NextResponse.json({
       success: true,
-      message: 'Account created successfully',
+      message: 'Account created. Please verify your email.',
+      requiresVerification: true,
       user: {
-        id: user.id,
-        userId: user.userId,
         email: user.email,
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
       },
-      wallet: wallet ? {
-        accountNumber: wallet.accountNumber,
-        bankName: wallet.bankName,
-        accountName: wallet.accountName
-      } : null
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
