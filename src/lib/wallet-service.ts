@@ -89,15 +89,22 @@ export async function createWalletWithRetry(params: {
 /**
  * Ensure user has a wallet (create if missing)
  */
-export async function ensureUserHasWallet(userId: string): Promise<boolean> {
+export async function ensureUserHasWallet(userId: string): Promise<{
+  success: boolean
+  error?: string
+  wallet?: any
+}> {
   try {
+    console.log('[WALLET-SERVICE] Ensuring wallet for user:', userId)
+    
     // Check if wallet exists
     const wallet = await prisma.wallet.findUnique({
       where: { userId }
     })
     
     if (wallet) {
-      return true
+      console.log('[WALLET-SERVICE] Wallet already exists')
+      return { success: true, wallet }
     }
     
     // Get user details
@@ -112,9 +119,12 @@ export async function ensureUserHasWallet(userId: string): Promise<boolean> {
     })
     
     if (!user) {
-      console.error('[WALLET-SERVICE] User not found:', userId)
-      return false
+      const error = 'User not found'
+      console.error('[WALLET-SERVICE]', error, userId)
+      return { success: false, error }
     }
+    
+    console.log('[WALLET-SERVICE] Creating wallet for:', user.email)
     
     // Create wallet
     const firstName = user.firstName || user.username || user.email.split('@')[0]
@@ -127,9 +137,17 @@ export async function ensureUserHasWallet(userId: string): Promise<boolean> {
       lastName
     })
     
-    return result.success
-  } catch (error) {
+    if (!result.success) {
+      console.error('[WALLET-SERVICE] Wallet creation failed:', result.error)
+    }
+    
+    return result
+  } catch (error: any) {
     console.error('[WALLET-SERVICE] Error ensuring wallet:', error)
-    return false
+    console.error('[WALLET-SERVICE] Error stack:', error.stack)
+    return { 
+      success: false, 
+      error: error.message || 'Unknown error'
+    }
   }
 }

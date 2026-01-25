@@ -22,27 +22,22 @@ export async function POST(request: NextRequest) {
     // Ensure user has a wallet
     const result = await ensureUserHasWallet(session.user.id)
 
-    if (result) {
+    if (result.success) {
       console.log('[WALLET-ENSURE] User has wallet:', session.user.email)
       return NextResponse.json({ 
         success: true,
-        hasWallet: true 
+        hasWallet: true,
+        wallet: result.wallet
       })
     } else {
       console.error('[WALLET-ENSURE] Failed to ensure wallet for:', session.user.email)
-      
-      // Get more details about the failure
-      const { prisma } = await import('@/lib/prisma')
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { email: true, firstName: true, lastName: true }
-      })
+      console.error('[WALLET-ENSURE] Error:', result.error)
       
       return NextResponse.json({ 
         success: false,
         hasWallet: false,
-        error: 'Failed to create wallet. Please check server logs for details.',
-        userInfo: user
+        error: result.error || 'Failed to create wallet',
+        details: result.error
       }, { status: 500 })
     }
   } catch (error: any) {
