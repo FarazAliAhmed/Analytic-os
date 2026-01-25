@@ -320,9 +320,15 @@ export default function SignUpModal({ open, onClose, onSwitchToSignin }: SignUpM
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '')
+                    if (value.length <= 13) {
+                      setPhone(value)
+                    }
+                  }}
                   className="w-full bg-[#1A1A1A] border border-[#23262F] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#4459FF]"
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+234 80 0000 0000"
+                  maxLength={13}
                 />
               </div>
 
