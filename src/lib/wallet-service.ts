@@ -1,121 +1,135 @@
-import { prisma } from '@/lib/prisma'
-import { createReservedAccount } from '@/lib/monnify'
+import { prisma } from './prisma'
+import { createReservedAccount } from './monnify'
 
-// Types
-export interface CreateWalletParams {
+/**
+ * Sleep utility for retry delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/**
+ * Create wallet with retry logic
+ */
+export async function createWalletWithRetry(params: {
   userId: string
   email: string
-  name: string
-}
-
-export interface CreditWalletParams {
-  walletId: string
-  amount: number // in kobo
-  description: string
-  reference: string
-  monnifyRef: string
-}
-
-export interface WalletResult {
+  firstName: string
+  lastName: string
+  maxRetries?: number
+}): Promise<{
   success: boolean
-  data?: any
+  wallet?: any
   error?: string
-}
-
-// Create wallet for user (called on signup)
-export async function createWallet(params: CreateWalletParams): Promise<WalletResult> {
-  try {
-    // Check if wallet already exists
-    const existing = await prisma.wallet.findUnique({
-      where: { userId: params.userId }
-    })
-
-    if (existing) {
-      return { success: true, data: existing }
-    }
-
-    // Create wallet (account details from Monnify API)
-    const monnifyAccount = await createReservedAccount({
-      email: params.email,
-      firstName: params.name.split(' ')[0],
-      lastName: params.name.split(' ').slice(1).join(' ') || params.name.split(' ')[0],
-      reference: `WALLET_${params.userId}_${Date.now()}`
-    })
-
-    const wallet = await prisma.wallet.create({
-      data: {
-        userId: params.userId,
-        accountNumber: monnifyAccount.accountNumber,
-        bankName: monnifyAccount.bankName,
-        accountName: monnifyAccount.accountName,
-        accountRef: monnifyAccount.accountReference,
-        balance: 0
-      }
-    })
-
-    return { success: true, data: wallet }
-  } catch (error) {
-    console.error('createWallet error:', error)
-    return { success: false, error: 'Failed to create wallet' }
-  }
-}
-
-// Get wallet by user ID
-export async function getWalletByUserId(userId: string) {
-  return prisma.wallet.findUnique({
-    where: { userId },
-    include: { transactions: { orderBy: { createdAt: 'desc' }, take: 10 } }
-  })
-}
-
-// Credit wallet (called when payment detected)
-export async function creditWallet(params: CreditWalletParams): Promise<WalletResult> {
-  try {
-    // Use transaction to ensure atomicity
-    const result = await prisma.$transaction(async (tx) => {
-      // Check for duplicate reference
-      const existing = await tx.transaction.findUnique({
-        where: { reference: params.reference }
+}> {
+  const { userId, email, firstName, lastName, maxRetries = 3 } = params
+  
+  let lastError: any = null
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[WALLET-SERVICE] Attempt ${attempt}/${maxRetries} to create wallet for ${email}`)
+      
+      // Check if wallet already exists
+      const existingWallet = await prisma.wallet.findUnique({
+        where: { userId }
       })
-
-      if (existing) {
-        return { success: false, error: 'Duplicate transaction', data: existing }
+      
+      if (existingWallet) {
+        console.log(`[WALLET-SERVICE] Wallet already exists for user ${email}`)
+        return { success: true, wallet: existingWallet }
       }
-
-      // Create transaction record
-      const transaction = await tx.transaction.create({
+      
+      // Create Monnify reserved account
+      const monnifyAccount = await createReservedAccount({
+        email,
+        firstName,
+        lastName,
+        reference: `WALLET_${userId}_${Date.now()}`
+      })
+      
+      console.log(`[WALLET-SERVICE] Monnify account created: ${monnifyAccount.accountNumber}`)
+      
+      // Save wallet to database
+      const wallet = await prisma.wallet.create({
         data: {
-          walletId: params.walletId,
-          type: 'credit',
-          amount: params.amount,
-          description: params.description,
-          reference: params.reference,
-          monnifyRef: params.monnifyRef,
-          status: 'completed'
+          userId,
+          accountNumber: monnifyAccount.accountNumber,
+          bankName: monnifyAccount.bankName,
+          accountName: monnifyAccount.accountName,
+          accountRef: monnifyAccount.accountReference,
+          balance: 0
         }
       })
-
-      // Update wallet balance
-      const wallet = await tx.wallet.update({
-        where: { id: params.walletId },
-        data: { balance: { increment: params.amount } }
-      })
-
-      return { success: true, data: { transaction, wallet } }
-    })
-
-    return result
-  } catch (error) {
-    console.error('creditWallet error:', error)
-    return { success: false, error: 'Failed to credit wallet' }
+      
+      console.log(`[WALLET-SERVICE] Wallet created successfully for ${email}`)
+      return { success: true, wallet }
+      
+    } catch (error: any) {
+      lastError = error
+      console.error(`[WALLET-SERVICE] Attempt ${attempt} failed:`, error.message)
+      
+      // If this is not the last attempt, wait before retrying
+      if (attempt < maxRetries) {
+        const delayMs = 1000 * attempt // Exponential backoff: 1s, 2s, 3s
+        console.log(`[WALLET-SERVICE] Retrying in ${delayMs}ms...`)
+        await sleep(delayMs)
+      }
+    }
+  }
+  
+  // All attempts failed
+  console.error(`[WALLET-SERVICE] Failed to create wallet after ${maxRetries} attempts`)
+  return {
+    success: false,
+    error: lastError?.message || 'Failed to create wallet'
   }
 }
 
-// Format balance for display (kobo to NGN)
-export function formatKoboToNaira(kobo: number): string {
-  const naira = kobo / 100
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN'
-  }).format(naira)
+/**
+ * Ensure user has a wallet (create if missing)
+ */
+export async function ensureUserHasWallet(userId: string): Promise<boolean> {
+  try {
+    // Check if wallet exists
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId }
+    })
+    
+    if (wallet) {
+      return true
+    }
+    
+    // Get user details
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        firstName: true,
+        lastName: true,
+        username: true
+      }
+    })
+    
+    if (!user) {
+      console.error('[WALLET-SERVICE] User not found:', userId)
+      return false
+    }
+    
+    // Create wallet
+    const firstName = user.firstName || user.username || user.email.split('@')[0]
+    const lastName = user.lastName || user.username || user.email.split('@')[0]
+    
+    const result = await createWalletWithRetry({
+      userId,
+      email: user.email,
+      firstName,
+      lastName
+    })
+    
+    return result.success
+  } catch (error) {
+    console.error('[WALLET-SERVICE] Error ensuring wallet:', error)
+    return false
+  }
 }

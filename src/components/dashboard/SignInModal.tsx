@@ -17,8 +17,16 @@ export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInM
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showComingSoon, setShowComingSoon] = useState(false)
+  const [comingSoonProvider, setComingSoonProvider] = useState('')
 
   if (!open) return null
+
+  const handleComingSoon = (provider: string) => {
+    setComingSoonProvider(provider)
+    setShowComingSoon(true)
+    setTimeout(() => setShowComingSoon(false), 2000)
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,6 +85,13 @@ export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInM
           </div>
         )}
 
+        {/* Coming Soon message */}
+        {showComingSoon && (
+          <div className="mb-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm animate-fadeIn">
+            🚀 {comingSoonProvider} sign-in coming soon!
+          </div>
+        )}
+
         {/* Social Sign In Buttons */}
         <div className="space-y-3 mb-6">
           <p className="text-center text-gray-400 text-sm">Continue with</p>
@@ -99,7 +114,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInM
           {/* Facebook */}
           <button
             type="button"
-            onClick={() => signIn('facebook', { callbackUrl: '/dashboard' })}
+            onClick={() => handleComingSoon('Facebook')}
             className="w-full py-3 bg-[#1A1A1A] hover:bg-[#23262F] border border-[#23262F] rounded-lg text-white font-medium flex items-center justify-center gap-3 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
@@ -111,7 +126,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignup }: SignInM
           {/* Twitter/X */}
           <button
             type="button"
-            onClick={() => signIn('twitter', { callbackUrl: '/dashboard' })}
+            onClick={() => handleComingSoon('Twitter/X')}
             className="w-full py-3 bg-[#1A1A1A] hover:bg-[#23262F] border border-[#23262F] rounded-lg text-white font-medium flex items-center justify-center gap-3 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

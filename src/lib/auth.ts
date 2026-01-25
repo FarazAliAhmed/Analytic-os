@@ -221,29 +221,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           // If user exists but has no wallet, create one
           if (!existingUser.wallet) {
-            console.log('Creating wallet for OAuth user:', existingUser.email)
-            try {
-              const { createReservedAccount } = await import('@/lib/monnify')
-              const monnifyAccount = await createReservedAccount({
-                email: existingUser.email,
-                firstName: existingUser.firstName || user.name?.split(' ')[0] || 'User',
-                lastName: existingUser.lastName || user.name?.split(' ').slice(1).join(' ') || 'User',
-                reference: `WALLET_${existingUser.id}_${Date.now()}`
-              })
-
-              await prisma.wallet.create({
-                data: {
-                  userId: existingUser.id,
-                  accountNumber: monnifyAccount.accountNumber,
-                  bankName: monnifyAccount.bankName,
-                  accountName: monnifyAccount.accountName,
-                  accountRef: monnifyAccount.accountReference,
-                  balance: 0
-                }
-              })
-              console.log('Wallet created successfully for:', existingUser.email)
-            } catch (walletError) {
-              console.error('Failed to create wallet for OAuth user:', walletError)
+            console.log('[OAUTH] Creating wallet for OAuth user:', existingUser.email)
+            const { createWalletWithRetry } = await import('@/lib/wallet-service')
+            const walletResult = await createWalletWithRetry({
+              userId: existingUser.id,
+              email: existingUser.email,
+              firstName: existingUser.firstName || user.name?.split(' ')[0] || 'User',
+              lastName: existingUser.lastName || user.name?.split(' ').slice(1).join(' ') || 'User',
+              maxRetries: 3
+            })
+            
+            if (walletResult.success) {
+              console.log('[OAUTH] Wallet created successfully for:', existingUser.email)
+            } else {
+              console.error('[OAUTH] Failed to create wallet:', walletResult.error)
             }
           }
         } catch (error) {
@@ -282,28 +273,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           console.log('Updated new OAuth user with userId and username:', user.email)
 
           // Create wallet for new user
-          try {
-            const { createReservedAccount } = await import('@/lib/monnify')
-            const monnifyAccount = await createReservedAccount({
-              email: user.email!,
-              firstName: firstName,
-              lastName: lastName,
-              reference: `WALLET_${user.id}_${Date.now()}`
-            })
-
-            await prisma.wallet.create({
-              data: {
-                userId: user.id,
-                accountNumber: monnifyAccount.accountNumber,
-                bankName: monnifyAccount.bankName,
-                accountName: monnifyAccount.accountName,
-                accountRef: monnifyAccount.accountReference,
-                balance: 0
-              }
-            })
-            console.log('Wallet created for new OAuth user:', user.email)
-          } catch (walletError) {
-            console.error('Failed to create wallet in createUser event:', walletError)
+          console.log('[OAUTH-CREATE] Creating wallet for new user:', user.email)
+          const { createWalletWithRetry } = await import('@/lib/wallet-service')
+          const walletResult = await createWalletWithRetry({
+            userId: user.id,
+            email: user.email!,
+            firstName: firstName,
+            lastName: lastName,
+            maxRetries: 3
+          })
+          
+          if (walletResult.success) {
+            console.log('[OAUTH-CREATE] Wallet created for new OAuth user:', user.email)
+          } else {
+            console.error('[OAUTH-CREATE] Failed to create wallet:', walletResult.error)
           }
         } catch (error) {
           console.error('Failed to update new OAuth user:', error)

@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth/password'
 import { sendWelcomeEmail } from '@/lib/auth/email'
-import { createReservedAccount } from '@/lib/monnify'
 import { generateUserId } from '@/lib/user-id'
+import { createWalletWithRetry } from '@/lib/wallet-service'
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -70,30 +70,25 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Auto-create NGN wallet with Monnify reserved account
+    // Auto-create NGN wallet with Monnify reserved account (with retry logic)
     let wallet = null
-    try {
-      const monnifyAccount = await createReservedAccount({
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        reference: `WALLET_${user.id}_${Date.now()}`
-      })
-
-      wallet = await prisma.wallet.create({
-        data: {
-          userId: user.id,
-          accountNumber: monnifyAccount.accountNumber,
-          bankName: monnifyAccount.bankName,
-          accountName: monnifyAccount.accountName,
-          accountRef: monnifyAccount.accountReference,
-          balance: 0
-        }
-      })
-    } catch (walletError) {
-      console.error('Failed to create wallet during registration:', walletError)
+    console.log(`[REGISTRATION] Creating wallet for user: ${user.email}`)
+    
+    const walletResult = await createWalletWithRetry({
+      userId: user.id,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      maxRetries: 3
+    })
+    
+    if (walletResult.success) {
+      wallet = walletResult.wallet
+      console.log(`[REGISTRATION] Wallet created successfully for: ${user.email}`)
+    } else {
+      console.error('[REGISTRATION] Failed to create wallet:', walletResult.error)
       // Don't fail registration if wallet creation fails
-      // Wallet can be created later via /api/wallet/create
+      // Wallet can be created later
     }
 
     // Send welcome email (don't block on email failure)
