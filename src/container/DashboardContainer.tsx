@@ -35,6 +35,18 @@ export default function DashboardContainer() {
         fetchTokenCount();
     }, []);
 
+    // Ensure user has a wallet (safety net for OAuth users)
+    useEffect(() => {
+        const ensureWallet = async () => {
+            try {
+                await fetch('/api/wallet/ensure', { method: 'POST' });
+            } catch (error) {
+                console.error('Failed to ensure wallet:', error);
+            }
+        };
+        ensureWallet();
+    }, []);
+
     // Fetch watchlist IDs
     useEffect(() => {
         const fetchWatchlist = async () => {

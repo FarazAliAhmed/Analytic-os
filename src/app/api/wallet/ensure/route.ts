@@ -1,79 +1,82 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { createReservedAccount } from '@/lib/monnify'
+import { ensureUserHasWallet } from '@/lib/wallet-service'
 
-export async function POST() {
+/**
+ * API endpoint to ensure the current user has a wallet
+ * This is called automatically when user logs in or accesses dashboard
+ */
+export async function POST(request: NextRequest) {
   try {
     const session = await auth()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, error: 'Not authenticated' },
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Check if user already has a wallet
-    const existingWallet = await prisma.wallet.findUnique({
-      where: { userId: session.user.id }
-    })
+    console.log('[WALLET-ENSURE] Checking wallet for user:', session.user.email)
 
-    if (existingWallet) {
-      return NextResponse.json({
+    // Ensure user has a wallet
+    const hasWallet = await ensureUserHasWallet(session.user.id)
+
+    if (hasWallet) {
+      console.log('[WALLET-ENSURE] User has wallet:', session.user.email)
+      return NextResponse.json({ 
         success: true,
-        message: 'Wallet already exists',
-        wallet: existingWallet
+        hasWallet: true 
       })
+    } else {
+      console.error('[WALLET-ENSURE] Failed to ensure wallet for:', session.user.email)
+      return NextResponse.json({ 
+        success: false,
+        hasWallet: false,
+        error: 'Failed to create wallet'
+      }, { status: 500 })
     }
+  } catch (error) {
+    console.error('[WALLET-ENSURE] Error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
 
-    // Get user details
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
-    })
+/**
+ * GET endpoint to check if user has a wallet
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth()
 
-    if (!user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
-    // Create Monnify account
-    console.log('Creating Monnify account for:', user.email)
-    const monnifyAccount = await createReservedAccount({
-      email: user.email,
-      firstName: user.firstName || user.name?.split(' ')[0] || 'User',
-      lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || 'User',
-      reference: `WALLET_${user.id}_${Date.now()}`
+    const { prisma } = await import('@/lib/prisma')
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId: session.user.id }
     })
 
-    // Create wallet in database
-    const wallet = await prisma.wallet.create({
-      data: {
-        userId: user.id,
-        accountNumber: monnifyAccount.accountNumber,
-        bankName: monnifyAccount.bankName,
-        accountName: monnifyAccount.accountName,
-        accountRef: monnifyAccount.accountReference,
-        balance: 0
-      }
-    })
-
-    console.log('Wallet created successfully for:', user.email)
-
-    return NextResponse.json({
-      success: true,
-      message: 'Wallet created successfully',
-      wallet
+    return NextResponse.json({ 
+      hasWallet: !!wallet,
+      wallet: wallet ? {
+        accountNumber: wallet.accountNumber,
+        bankName: wallet.bankName,
+        accountName: wallet.accountName,
+        balance: wallet.balance
+      } : null
     })
   } catch (error) {
-    console.error('Error ensuring wallet:', error)
+    console.error('[WALLET-ENSURE] Error checking wallet:', error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to create wallet' 
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

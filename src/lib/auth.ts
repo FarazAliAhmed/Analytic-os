@@ -186,6 +186,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Handle OAuth sign-in - let PrismaAdapter handle user creation
       if (account?.provider === 'google' || account?.provider === 'facebook' || account?.provider === 'twitter') {
         try {
+          // Wait a moment for PrismaAdapter to create the user if it's a new signup
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
           // Check if user exists in database (PrismaAdapter may have just created it)
           const existingUser = await prisma.user.findUnique({
             where: { email: user.email! },
@@ -193,9 +196,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           })
 
           if (!existingUser) {
-            console.log('User not found, will be created by adapter')
+            console.log('[OAUTH] User not found after wait, will be created by adapter')
             return true
           }
+
+          console.log('[OAUTH] Found user:', existingUser.email, 'Has wallet:', !!existingUser.wallet)
 
           // Update user with additional fields if they're missing
           if (!existingUser.userId || !existingUser.username) {
@@ -216,7 +221,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 image: user.image || existingUser.image,
               }
             })
-            console.log('Updated OAuth user with missing fields:', user.email)
+            console.log('[OAUTH] Updated OAuth user with missing fields:', user.email)
           }
 
           // If user exists but has no wallet, create one
@@ -235,10 +240,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               console.log('[OAUTH] Wallet created successfully for:', existingUser.email)
             } else {
               console.error('[OAUTH] Failed to create wallet:', walletResult.error)
+              // Don't block sign-in even if wallet creation fails
             }
+          } else {
+            console.log('[OAUTH] User already has wallet')
           }
         } catch (error) {
-          console.error('Error in signIn callback:', error)
+          console.error('[OAUTH] Error in signIn callback:', error)
+          // Don't block sign-in on errors
         }
         return true
       }
