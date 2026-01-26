@@ -223,3 +223,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
   }
 }
+
+
+// Add GET handler for webhook testing
+export async function GET() {
+  return NextResponse.json({ 
+    status: 'ok',
+    message: 'Monnify webhook endpoint is active',
+    timestamp: new Date().toISOString()
+  })
+}
