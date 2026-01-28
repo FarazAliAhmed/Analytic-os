@@ -96,7 +96,11 @@ export async function POST(request: NextRequest) {
       if (!result.success) {
         if (result.error === 'Duplicate transaction') {
           console.log(`[Webhook] Duplicate transaction ignored: ${transactionReference}`)
-          return NextResponse.json({ success: true, message: 'Already processed' })
+          return NextResponse.json({ 
+            requestSuccessful: true,
+            responseMessage: "success",
+            responseCode: "0"
+          }, { status: 200 })
         }
         console.error('[Webhook] Failed to credit wallet:', result.error)
         return NextResponse.json({ error: result.error }, { status: 500 })
@@ -111,7 +115,12 @@ export async function POST(request: NextRequest) {
         transactionReference || paymentReference
       )
       
-      return NextResponse.json({ success: true })
+      // Return response in Monnify's expected format
+      return NextResponse.json({ 
+        requestSuccessful: true,
+        responseMessage: "success",
+        responseCode: "0"
+      }, { status: 200 })
     }
 
     // Handle successful disbursement (withdrawal completed)
@@ -151,7 +160,11 @@ export async function POST(request: NextRequest) {
       }
 
       console.log(`[Webhook] Disbursement completed: ${reference}`)
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ 
+        requestSuccessful: true,
+        responseMessage: "success",
+        responseCode: "0"
+      }, { status: 200 })
     }
 
     // Handle failed/reversed disbursement (refund the wallet)
@@ -211,12 +224,20 @@ export async function POST(request: NextRequest) {
         console.log(`[Webhook] Refunded ${originalTx.amount} kobo for ${eventType}`)
       }
 
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ 
+        requestSuccessful: true,
+        responseMessage: "success",
+        responseCode: "0"
+      }, { status: 200 })
     }
 
     // Log unhandled event types
     console.log(`[Webhook] Unhandled event type: ${eventType}`)
-    return NextResponse.json({ success: true, message: 'Event acknowledged' })
+    return NextResponse.json({ 
+      requestSuccessful: true,
+      responseMessage: "success",
+      responseCode: "0"
+    }, { status: 200 })
 
   } catch (error) {
     console.error('[Webhook] Error processing webhook:', error)

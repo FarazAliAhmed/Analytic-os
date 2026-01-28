@@ -9,6 +9,9 @@
     --color-surface: #181A20;
     --color-surface-light: #23262F;
     --color-border: #858B9A33;
+    --color-mobile-bg: #0A0A0A;
+    --color-mobile-surface: #1A1A1A;
+    --color-mobile-border: #252525;
 }
 
 /* CSS Variables for Tailwind 4 - must be defined at root level for opacity modifiers */
@@ -19,6 +22,9 @@
     --color-surface: #181A20;
     --color-surface-light: #23262F;
     --color-border: #858B9A33;
+    --color-mobile-bg: #0A0A0A;
+    --color-mobile-surface: #1A1A1A;
+    --color-mobile-border: #252525;
 }
 
 /* Header dropdown animations */
@@ -29,6 +35,16 @@
 
 .animate-fadeIn {
   animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Slide down animation for mobile menu */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Modal scale animation */
@@ -134,4 +150,19 @@
 
 .gradient-animate stop {
   animation: gradientShift 8s ease-in-out infinite;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area for mobile devices with notches */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }

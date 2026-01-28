@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/common/Sidebar';
 import Header from '@/common/Header';
 import { ZendeskButton } from '@/components/dashboard/ZendeskButton';
@@ -7,7 +7,32 @@ import { TokenProvider } from '@/contexts/TokenContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Mobile layout - no sidebar/header, children handle their own layout
+    if (isMobile) {
+        return (
+            <TokenProvider>
+                <div className="w-full min-h-screen bg-[#0A0A0A] text-white">
+                    {children}
+                    <ZendeskButton variant="icon" />
+                </div>
+            </TokenProvider>
+        );
+    }
+
+    // Desktop layout - with sidebar and header
     return (
         <TokenProvider>
             <div className="w-full h-screen flex bg-primary text-white overflow-hidden">
