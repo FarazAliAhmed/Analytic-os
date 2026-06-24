@@ -24,10 +24,11 @@ function validateSignature(body: string, signature: string | null): boolean {
 
   // Use timing-safe comparison to prevent timing attacks
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature.toLowerCase()),
-      Buffer.from(computedSignature.toLowerCase())
-    )
+    const sigBuf = Buffer.from(signature.toLowerCase())
+    const computedBuf = Buffer.from(computedSignature.toLowerCase())
+    // timingSafeEqual throws if lengths differ — must check first
+    if (sigBuf.length !== computedBuf.length) return false
+    return crypto.timingSafeEqual(sigBuf, computedBuf)
   } catch {
     return false
   }
@@ -127,6 +128,8 @@ export async function POST(request: NextRequest) {
     if (eventType === 'SUCCESSFUL_DISBURSEMENT') {
       const { reference, transactionReference, status } = eventData
 
+      console.log(`[Webhook] SUCCESSFUL_DISBURSEMENT - reference: ${reference}, transactionReference: ${transactionReference}`)
+
       // Update transaction status to completed
       const updatedTx = await prisma.transaction.findFirst({
         where: {
@@ -137,6 +140,10 @@ export async function POST(request: NextRequest) {
         },
         include: { wallet: true }
       })
+
+      if (!updatedTx) {
+        console.warn(`[Webhook] No transaction found for SUCCESSFUL_DISBURSEMENT - reference: ${reference}, monnifyRef: ${transactionReference}`)
+      }
       
       if (updatedTx) {
         await prisma.transaction.update({
